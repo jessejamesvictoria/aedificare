@@ -83,6 +83,10 @@ const site = {
   <meta name="build" content={BUILD} />
   <script type="application/ld+json" set:html={JSON.stringify(site)} />
   {extra.map((s) => <script type="application/ld+json" set:html={JSON.stringify(s)} />)}
+  <script>
+    import { inject } from '@vercel/analytics';
+    inject();
+  </script>
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
