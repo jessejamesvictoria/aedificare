@@ -67,6 +67,27 @@ export const EDITIONS = [
     ],
   },
   {
+    code: 'Edition 01', slug: 'edition-01', path: '/edition-01',
+    title: 'The Snapshot Problem', acid: 'Snapshot',
+    lede: 'Agents formed societies this summer. The models under them learned nothing.',
+    date: '2026-09-11', dateLabel: '11 Sep 2026',
+    seed: '5A1E', k: [16 / 3, 29 / 4, 13 / 4], pdf: '/pdf/edition-01.pdf',
+    contents: [
+      { n: '00', t: 'The window', id: 'window' },
+      { n: '01', t: 'Societies', id: 'societies' },
+      { n: '02', t: 'The cliff', id: 'cliff' },
+      { n: '03', t: 'The dark room', id: 'darkroom' },
+      { n: '04', t: 'The snapshot', id: 'snapshot' },
+      { n: '05', t: 'Plasticity', id: 'plasticity' },
+      { n: '06', t: 'The living layer', id: 'living' },
+      { n: '07', t: 'The mirror world', id: 'mirror' },
+      { n: '08', t: 'Eight rules', id: 'rules' },
+      { n: '09', t: 'Where it is wrong', id: 'wrong' },
+      { n: '10', t: 'Sources', id: 'sources' },
+      { n: '11', t: 'The vista', id: 'vista' },
+    ],
+  },
+  {
     code: 'Edition 02', slug: 'edition-02', path: '/edition-02',
     title: 'The Subtraction', acid: 'Subtraction',
     lede: 'A processor was built, then deliberately reduced, then sold at a quarter of its worth. The reduction is the product.',
@@ -83,4 +104,20 @@ export const LICENCE = {
   name: 'CC BY 4.0',
   url: 'https://creativecommons.org/licenses/by/4.0/',
   spdx: 'CC-BY-4.0',
+};
+
+// Counts read from lists are printed as words, never typed.
+export const numberWord = (n) =>
+  ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'][n] ?? String(n);
+
+// The meta description of an edition: the lede, then the record line (code,
+// title, date, section count, licence). Generated, never typed, because
+// LinkedIn's Post Inspector warns under 100 characters and a lede alone can
+// be 48; everything after the lede is data the page already carries.
+// tools/check-contents.cjs fails the build outside 100 to 200 characters.
+export const describe = (e) => {
+  const record = [e.code, e.title, e.dateLabel];
+  if (e.contents) record.push(`${numberWord(e.contents.length)} sections`);
+  record.push(LICENCE.name);
+  return `${e.lede} ${record.join(' · ')}`;
 };
