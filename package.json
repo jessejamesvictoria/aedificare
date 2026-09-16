@@ -13,9 +13,12 @@
     "marks": "node tools/generate-marks.mjs"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.10",
     "@astrojs/rss": "^4.0.0",
     "@astrojs/sitemap": "^3.6.0",
-    "astro": "^7.3.2"
+    "@vercel/analytics": "^2.0.1",
+    "astro": "^7.3.2",
+    "typescript": "^6.0.3"
   },
   "devDependencies": {
     "axe-core": "^4.13.0"
