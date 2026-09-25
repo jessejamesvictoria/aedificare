@@ -10,8 +10,15 @@
 # upload through the YouTube Data API, waits on the owner's OAuth client.
 #
 # Also runs once when this file itself changes, so the workflow is proved on
-# the branch that changes it and not trusted on faith. (Run 1 failed on the
-# Playwright import; run 2 carries the fix.)
+# the branch that changes it and not trusted on faith.
+#
+# The second half: when the repository holds YT_CLIENT_ID, YT_CLIENT_SECRET
+# and YT_REFRESH_TOKEN (tools/youtube-auth.mjs mints the token once), the
+# film and its Short are uploaded to the channel as PRIVATE, with captions
+# and thumbnail, and the owner presses Publish in Studio after watching.
+# Without the secrets the upload step is skipped. Either way the render is
+# then filed as a permanent Release named film-<slug> (release.yml), which
+# is where the owner finds a film: the artifact is the 90-day backup.
 name: film
 
 on:
@@ -25,6 +32,12 @@ on:
         description: 'wide (1920x1080) or tall (1080x1920)'
         required: false
         default: wide
+      privacy:
+        description: 'YouTube privacy for the upload, when the secrets exist'
+        required: false
+        default: private
+        type: choice
+        options: [private, unlisted, public]
   push:
     paths: ['.github/workflows/film.yml']
 
@@ -39,6 +52,7 @@ jobs:
     env:
       SLUG: ${{ inputs.slug || 'edition-03' }}
       FORMAT: ${{ inputs.format || 'wide' }}
+      PRIVACY: ${{ inputs.privacy || 'private' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -68,6 +82,22 @@ jobs:
       - name: Film
         run: node tools/generate-film.mjs --slug "$SLUG" --format "$FORMAT"
 
+      # The Short reuses the narration: section 00 and the record, tall.
+      - name: Short
+        run: node tools/generate-film.mjs --slug "$SLUG" --step render --short
+
+      # Skipped without the secrets. Private by default; nothing goes public from a machine.
+      - name: Upload to YouTube
+        if: env.YT_REFRESH_TOKEN != ''
+        env:
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          YT_PLAYLIST_ID: ${{ vars.YT_PLAYLIST_ID }}
+        run: |
+          node tools/upload-youtube.mjs "brand/youtube/$SLUG/meta.json" --privacy "$PRIVACY"
+          node tools/upload-youtube.mjs "brand/youtube/$SLUG/meta-short.json" --privacy "$PRIVACY"
+
       - name: Upload the film
         uses: actions/upload-artifact@v4
         with:
@@ -75,3 +105,15 @@ jobs:
           path: brand/youtube/${{ env.SLUG }}
           retention-days: 90
           compression-level: 0
+
+  # The filing system: the same files as a permanent Release named film-<slug>.
+  release:
+    needs: film
+    if: ${{ (inputs.format || 'wide') == 'wide' }}
+    uses: ./.github/workflows/release.yml
+    permissions:
+      contents: write
+      actions: read
+    with:
+      slug: ${{ inputs.slug || 'edition-03' }}
+      run_id: ${{ github.run_id }}
