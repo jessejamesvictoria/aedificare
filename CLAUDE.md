@@ -33,7 +33,7 @@ Shipped (2026-09-15):
 | `/the-tilt-gap` | 3 Oct 2026 · *The Tilt Gap* (printed as Edition 04), fifteen sections, fifty-one sources, F/I/Q marks | live |
 | `/the-floor` | 18 Oct 2026 · *The Floor*, amends The Markup with the builder's own field numbers, ten sections, sixteen sources | live (2026-10-18, every source opened, the video checked against its captions) |
 | `/edition-03` | 15 Sep 2026 · *The Markup* (printed as Edition 03), eight sections, twelve sources | live |
-| `/edition-01` | 11 Sep 2026 · *The Snapshot Problem* (printed as Edition 01), twelve sections, thirty-three sources, three registers | live |
+| `/edition-01` | 11 Sep 2026 · *The Snapshot Problem* (printed as Edition 01), twelve sections, thirty-four sources, three registers | live (2026-10-18, every source opened, 56 of 63 flags upheld and corrected) |
 | `/ns-01` | 11 Sep 2026 · *The Hand in the Water* (printed as NS-01) | live |
 | `/ns-02` | 13 Sep 2026 · *The Closest Humans* (printed as NS-02), amends The Hand in the Water | live |
 | `/edition-02` | 18 Oct 2026 · *The Subtraction* (printed as Edition 02), nine sections, thirty-six sources | live (2026-10-18, sourced from scratch; no PDF, none was issued) |
@@ -395,7 +395,16 @@ for a shortlist for bios and cards, which is a separate deliverable.
   sets each matched video's generated metadata through
   `upload-youtube.mjs --update`, so a hand upload needs no video id
   pasted back; written 2026-10-06 and tested against a mocked channel,
-  not yet against the real one),
+  then run against the real one from 2026-10-17; `retire` makes an
+  older-voice video private once its replacement is public; `schedule`
+  (2026-10-18) moves a private video's publish time or holds it with
+  `none`, so a film whose edition is still being checked, or whose render
+  is being replaced, waits without anything being deleted; it never
+  touches a video that is out and never makes one public; `withdraw`
+  makes a named video that is out private at once, for a film found wrong
+  after it went up, and `upload --replace <release>` puts a corrected
+  render up beside the video it replaces, which then reads superseded and
+  is retired like an older voice),
   `generate-design-system.mjs` (the claude.ai/design bundle, below),
   `episode.mjs` (the news films, override 8: `check`, `sheet`, `narrate`,
   `render`; quote cards with a highlighter, maps from Natural Earth,
@@ -1054,6 +1063,37 @@ for a shortlist for bios and cards, which is a separate deliverable.
    Evolution Research, a 127 kB machine-written survey of residual networks
    with an embedded image: research, not an edition; not added to the
    repo.
+   **Checked, 2026-10-18, after its film had gone public** (Decisions
+   log, "A film waits for its edition's check"). Five checkers by section
+   opened every source, a skeptic per group re-opened every flag: 144
+   claims, 81 held, 63 flagged, 56 upheld. The one that mattered most was
+   the thesis: "every lesson those agents paid for died with the sandbox,
+   unless a human carried it out by hand", which the page's own case study
+   contradicts (the agents carried lessons out themselves, through the
+   board), so it now says a lesson outlived its sandbox only as a note the
+   next agent could read and not learn. Also: most of DeepMind's 71 were
+   not open conjectures; the interview agents' figure is 83 percent in the
+   paper's current version, not 85; Anthropic told its model about the
+   hacks before training, it did not find them unaided; only ROME is
+   rank-one; OpenAI's monitored model hacked less, not the same; the
+   newest Claude models hide their thinking by default, and the link from
+   summarized thinking to distillation is now Anthropic's own (12 Oct
+   2026, added as source 34) rather than the page's inference; the
+   accumulation paper keeps the original real data and piles up the
+   synthetic; ACE needed labels on finance; sparse memory learned as much
+   as full fine-tuning and forgot far less, on facts, so its point on the
+   plasticity chart moved (the chart is taller on a phone so the crowded
+   top keeps its labels apart); SEAL's 72.5 percent is the share of
+   self-edits that worked on eight puzzles chosen to be solvable; the eyes
+   grew before the move to land, not at it; the Lucas sentence keeps its
+   Measured label and the two sentences Lucas does not support are now
+   Position. Ten bibliography entries carried invented, misquoted or
+   stale titles and were corrected. "Four hours" was METR's thread, not
+   the report the page cites, so it is "within hours". The film was
+   withdrawn (private, 0 views) with `youtube-channel.mjs withdraw`, and
+   its Short was already held; both are rendered again from the corrected
+   page and replace the old pair through `upload --replace`. The print
+   PDF is left as issued. Reports are in the session's scratchpad.
 1. **Edition 02's PDF shipped in Liberation Sans and DejaVu Sans Mono.**
    `fonts/local-fonts.css` declared `src: url(fonts/bricolage-1.woff2)`, but
    CSS resolves `url()` relative to the stylesheet, which already lives in
@@ -1111,8 +1151,15 @@ for a shortlist for bios and cards, which is a separate deliverable.
    2026) and a rough real-world figure, so the datasheet is where The
    Markup looked, not all there was. The builder benched the MM8108 itself
    in January 2026, and those numbers are in no text (the vendor's site
-   and repositories, the press and the community were searched); they sit
-   behind YouTube's wall. The chipmaker's are not: Morse Micro's SDK
+   and repositories, the press and the community were searched); they sat
+   behind YouTube's wall until the vidIQ connector, added later the same
+   day, read that video's transcript through its own access (5 of its 150
+   monthly credits): about 19 down on the MM8108 "pretty consistently", a
+   47 up that is above the chip's physical-layer peak and that he calls
+   imperfect, and 15 each way on a good day for the MM6108, all from one
+   phone speed test at 8 MHz. They went into section 08 as a fifth number,
+   and the "would change this" rail lost the line asking for them. The
+   chipmaker's are not: Morse Micro's SDK
    release notes of 2 Sep 2026 measured the MM8108 at 8 MHz at up to 30
    down over UDP, and its chips page calls 43.3 a PHY rate, "not the data
    rate your application will receive", so the amended row carries four
@@ -1292,6 +1339,25 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
   API and would have vanished from matching once the new pair claimed the
   render, leaving both voices public; the title route now keeps an
   older-voice video matched.
+- **2026-10-18 · A film waits for its edition's check.** A film reads its
+  page aloud, so a page nobody checked becomes a film nobody checked, in a
+  voice, in front of more people than the page has. Four editions were
+  ported before the check-every-source duty (2026-10-11) and never had
+  every source opened: The Snapshot Problem, The Hand in the Water, The
+  Closest Humans and The Markup. The Markup's new film went public at 03:00
+  UTC on the 18th and The Snapshot Problem's at 15:00 UTC, while the
+  builder's session was paused, before anyone caught it. Everything else
+  from those four was held back with `youtube-channel.mjs schedule`: both
+  NS pairs and The Snapshot Problem's Short, still private, no publish
+  time. The four checked editions moved up so a film still goes out every
+  morning (The Tilt Gap on the 19th, The Fourth Axis on the 20th, The
+  Countersign on the 21st, The Supply Cabinet on the 22nd, then Edition 02
+  on the 25th and The Floor on the 26th), each Short after its own film. A
+  held video comes back only once its page is checked, and with a fresh
+  render if the check changed the page. **YouTube's PUT reply is not what
+  YouTube kept**: the first holds came back echoing the old publish time
+  while a fresh read showed the time cleared, so `schedule` now reads every
+  write back and judges that.
 
 ## Open
 
