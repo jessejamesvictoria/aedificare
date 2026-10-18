@@ -48,6 +48,12 @@ stops the run with exit 75 so the next run continues (narrate_gemini.py says
 how). A voice id that no longer exists fails the run rather than falling back
 to another voice: the channel speaks in one voice or not at all.
 
+THE ELEVENLABS VOICE (2026-10-17, later; the channel's voice since). With
+NARRATOR=eleven:<voice id> and ELEVENLABS_API_KEY, each read block is one
+request to ElevenLabs (tools/narrate_eleven.py), which returns the time of
+every character it was given, so word times need no aligner; the wav2vec2
+gate still checks that each block's audio says its words.
+
 transformers>=5.17 is stated because kokoro does not bound it: on 2 Oct 2026
 a fresh resolve (every Python from 3.11 to 3.14) backtracked to transformers
 4.12.2, whose tokenizers 0.10.3 has no wheel and no longer compiles, and the
@@ -168,7 +174,16 @@ def align(spoken_words, ktokens):
     return out
 
 
-ENGINE = os.environ.get('NARRATOR', '')
+ENGINE = os.environ.get('NARRATOR', '').strip()
+if not ENGINE:
+    # Never a voice by default: an unset NARRATOR used to mean Kokoro, which made a film in a voice the channel no
+    # longer speaks. tools/generate-film.mjs and tools/episode.mjs pass the channel's (src/config.mjs).
+    sys.exit('narrate: NARRATOR is not set. The channel speaks as src/config.mjs NARRATOR says; '
+             'set NARRATOR=kokoro to mean the old Kokoro voice on purpose.')
+if ENGINE.startswith('eleven:'):
+    from narrate_eleven import narrate_eleven  # tools/narrate_eleven.py, beside this file
+    narrate_eleven(DIR, SCRIPT, ENGINE.split(':', 1)[1], normalise, GAP_BEFORE, GAP_AFTER, SR)
+    sys.exit(0)
 if ENGINE.startswith('gemini:'):
     from narrate_gemini import narrate_gemini  # tools/narrate_gemini.py, beside this file
     narrate_gemini(DIR, SCRIPT, ENGINE.split(':', 1)[1], normalise, GAP_BEFORE, GAP_AFTER, SR)

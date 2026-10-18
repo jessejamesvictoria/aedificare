@@ -28,6 +28,47 @@ import { HOUSE } from './rose.mjs';
 
 const RAW = [
   {
+    slug: 'the-floor', path: '/the-floor',
+    title: 'The Floor', acid: 'Floor',
+    lede: 'The Markup quoted the datasheet. The builder had measured the first Haven a year before.',
+    // Drafted 16 Sep 2026 from the owner's transcript; every source opened and the page corrected on 18 Oct 2026,
+    // the day it went live, so that is its date (the code is the date). CLAUDE.md, Findings 6.
+    date: '2026-10-18', dateLabel: '18 Oct 2026',
+    amends: 'edition-03', pdf: null,
+    contents: [
+      { n: '00', t: 'The number', id: 'number' },
+      { n: '01', t: 'What The Markup did not have', id: 'missing' },
+      { n: '02', t: 'The build', id: 'build' },
+      { n: '03', t: 'The bench', id: 'bench' },
+      { n: '04', t: 'The power', id: 'power' },
+      { n: '05', t: 'The field', id: 'field' },
+      { n: '06', t: 'The other radio', id: 'other' },
+      { n: '07', t: 'What it carried', id: 'carried' },
+      { n: '08', t: 'Where The Markup stands', id: 'stands' },
+      { n: '09', t: 'Sources', id: 'sources' },
+    ],
+  },
+  {
+    slug: 'edition-02', path: '/edition-02', print: 'Edition 02',
+    title: 'The Subtraction', acid: 'Subtraction',
+    lede: 'A processor was built, then deliberately reduced, then sold at a fraction of its worth. The reduction is the product.',
+    // The print was a FACTS PENDING chassis and was never issued, so the date is the day the sourced page went
+    // live (the code is the date). Sourced 17 and 18 Oct 2026; CLAUDE.md, Findings 0g. No PDF: none was issued.
+    date: '2026-10-18', dateLabel: '18 Oct 2026',
+    seed: '0573', k: [8, 5], pdf: null,
+    contents: [
+      { n: '00', t: 'The margin moved out of the making', id: 'h00' },
+      { n: '01', t: 'September fifteenth, 2022', id: 'h01' },
+      { n: '02', t: 'It is the same piece of silicon', id: 'h02' },
+      { n: '03', t: 'Three cuts, none of them accidents', id: 'h03' },
+      { n: '04', t: 'Salvage asks what still works', id: 'h04' },
+      { n: '05', t: 'Nothing here is new', id: 'h05' },
+      { n: '06', t: 'People went looking for the rest of it', id: 'h06' },
+      { n: '07', t: 'A specimen, not a scandal', id: 'h07' },
+      { n: '08', t: 'Sources', id: 'hsrc' },
+    ],
+  },
+  {
     slug: 'the-countersign', path: '/the-countersign', print: 'Edition 09',
     title: 'The Countersign', acid: 'Countersign',
     lede: 'The first AI millionaire, and the human who signed for every cent.',
@@ -57,10 +98,9 @@ const RAW = [
     lede: 'Give a thousand agents one shared drawer. They will build a society in it.',
     date: '2026-10-08', dateLabel: '8 Oct 2026',
     seed: '9A17', k: [17 / 4, 29 / 5, 23 / 6], pdf: '/pdf/edition-06.pdf',
-    // A draft until its twelve sources have been opened. Editions 04 and 05
-    // also arrived as finished prints and both were wrong in ways that
-    // mattered; the flip is one line and it waits on the checking.
-    draft: true,
+    // Published 17 Oct 2026, once every source had been opened: 98 claims
+    // were corrected on the page (CLAUDE.md, Findings 0e). The date stays the
+    // print's, as for every ported edition.
     contents: [
       { n: '00', t: 'The incident', id: 'incident' },
       { n: '01', t: 'The forum', id: 'forum' },
@@ -118,26 +158,6 @@ const RAW = [
       { n: '12', t: 'The kill switch', id: 'kill' },
       { n: '13', t: 'Your tilt gap', id: 'yours' },
       { n: '14', t: 'Sources', id: 'sources' },
-    ],
-  },
-  {
-    slug: 'the-floor', path: '/the-floor',
-    title: 'The Floor', acid: 'Floor',
-    lede: 'The Markup quoted the datasheet. The builder had measured the radio a year before.',
-    date: '2026-09-16', dateLabel: '16 Sep 2026',
-    amends: 'edition-03', pdf: null,
-    draft: true,
-    contents: [
-      { n: '00', t: 'The number', id: 'number' },
-      { n: '01', t: 'What The Markup did not have', id: 'missing' },
-      { n: '02', t: 'The build', id: 'build' },
-      { n: '03', t: 'The bench', id: 'bench' },
-      { n: '04', t: 'The power', id: 'power' },
-      { n: '05', t: 'The field', id: 'field' },
-      { n: '06', t: 'The other radio', id: 'other' },
-      { n: '07', t: 'What it carried', id: 'carried' },
-      { n: '08', t: 'Where The Markup stands', id: 'stands' },
-      { n: '09', t: 'Sources', id: 'sources' },
     ],
   },
   {
@@ -218,14 +238,6 @@ const RAW = [
       { n: '10', t: 'Sources', id: 'sources' },
       { n: '11', t: 'The vista', id: 'vista' },
     ],
-  },
-  {
-    slug: 'edition-02', path: '/edition-02', print: 'Edition 02',
-    title: 'The Subtraction', acid: 'Subtraction',
-    lede: 'A processor was built, then deliberately reduced, then sold at a quarter of its worth. The reduction is the product.',
-    date: '2026-09-13', dateLabel: '2026',
-    seed: '0573', k: [8, 5], pdf: null,
-    draft: true,
   },
 ];
 

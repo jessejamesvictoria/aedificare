@@ -28,15 +28,15 @@ Shipped (2026-09-15):
 |---|---|---|
 | `/` | The index: live house-configuration rose, cropped wordmark, the editions with their contents | live |
 | `/the-countersign` | 16 Oct 2026 · *The Countersign* (printed as Edition 09), fifteen sections, twenty-two sources, three registers | live |
-| `/the-supply-cabinet` | 8 Oct 2026 · *The Supply Cabinet* (printed as Edition 06), eleven sections, twelve sources | **draft**: ported and swept, every source still to be opened |
+| `/the-supply-cabinet` | 8 Oct 2026 · *The Supply Cabinet* (printed as Edition 06), eleven sections, twelve sources (ten cited) | live (2026-10-17, every source opened, 98 claims corrected) |
 | `/the-fourth-axis` | 6 Oct 2026 · *The Fourth Axis* (printed as Edition 05), twelve sections, thirty-eight sources, three registers | live |
 | `/the-tilt-gap` | 3 Oct 2026 · *The Tilt Gap* (printed as Edition 04), fifteen sections, fifty-one sources, F/I/Q marks | live |
-| `/the-floor` | 16 Sep 2026 · *The Floor*, amends The Markup with the builder's own field numbers | **draft**: set the date, flip `draft`, it goes live |
+| `/the-floor` | 18 Oct 2026 · *The Floor*, amends The Markup with the builder's own field numbers, ten sections, sixteen sources | live (2026-10-18, every source opened, the video checked against its captions) |
 | `/edition-03` | 15 Sep 2026 · *The Markup* (printed as Edition 03), eight sections, twelve sources | live |
 | `/edition-01` | 11 Sep 2026 · *The Snapshot Problem* (printed as Edition 01), twelve sections, thirty-three sources, three registers | live |
 | `/ns-01` | 11 Sep 2026 · *The Hand in the Water* (printed as NS-01) | live |
 | `/ns-02` | 13 Sep 2026 · *The Closest Humans* (printed as NS-02), amends The Hand in the Water | live |
-| `/edition-02` | *The Subtraction* (printed as Edition 02) | **draft**: noindex, unlinked, out of sitemap/robots/feed |
+| `/edition-02` | 18 Oct 2026 · *The Subtraction* (printed as Edition 02), nine sections, thirty-six sources | live (2026-10-18, sourced from scratch; no PDF, none was issued) |
 | `/404` | | live |
 | `/feed.xml` `/llms.txt` `/llms-full.txt` `/robots.txt` `/sitemap-index.xml` `/ai.txt` `/humans.txt` | discoverability | generated or static |
 | `/privacy.txt` | the YouTube uploader's privacy statement, which Google's consent screen needs before the app can leave Testing (2026-10-17); plain text like `humans.txt`, not a page | static |
@@ -121,6 +121,35 @@ that is a reference, not documentation.
    falling back. The Markup's film and Short went up by hand in the old
    voice before this; they stay up until re-rendered, and that is the
    owner's call.
+   **Then ElevenLabs, a woman, American (same day, still before anything
+   was published).** The owner asked whether ElevenLabs, first on the
+   Artificial Analysis arena (1330 against Gemini 3.8 Flash TTS's 1275,
+   which listeners prefer about 58 to 42), was worth paying for; heard
+   it beside Gemini; chose it ("that's why you paid for it"); then asked
+   for a woman's voice and refused British ("that woman's British too")
+   in favour of what suits "the average" English-speaking viewer. Both
+   designed Gemini voices read as English to the owner and to an accent
+   classifier (SpeechBrain CommonAccent ECAPA: England first for both,
+   US first for every ElevenLabs candidate), so the classifier stood in
+   for the owner's ear when picking among candidates. The voice is
+   **"aedificare-husky-american"** (`sacfsNbCahgH0qw7PIO8`), designed in
+   the owner's paid ElevenLabs account (Starter, 40,000 credits a month,
+   commercial licence, the key stored as the repository secret `PLUTO`)
+   from a description: a woman in her early thirties, low, husky,
+   slightly smoky, General American, warm, intimate, unhurried. The owner
+   asked for "sexier, like ScarJo"; a named person's voice is never
+   imitated (this rule, YouTube's voice-likeness detection, and that
+   actor's own public objection to a sound-alike in 2024), so the brief
+   names qualities, never a person. The voice is written once, as
+   `NARRATOR` in `src/config.mjs`; the film tools and the upload guard
+   read it there, a repository variable `NARRATOR` only overrides it, and
+   `tools/narrate.py` refuses to run with no narrator rather than fall
+   back to Kokoro. It speaks through
+   `tools/narrate_eleven.py` (`NARRATOR=eleven:sacfsNbCahgH0qw7PIO8`) on
+   eleven_v4_turbo, which costs about 0.2 credits a character (105 for
+   525, read twice), so the seven films are about 15,000 credits. The
+   Gemini engine stays in the repo, retired, because it works and
+   because a voice is cheap to keep and expensive to rebuild.
 7. **The films get a voice of their own** (owner, 2026-09-24, later:
    "let's be like Fireship but Patrick Boyle dry humor, a unique
    Frankenstein voice"). Override 6 read the edition verbatim; this
@@ -241,7 +270,7 @@ for a shortlist for bios and cards, which is a separate deliverable.
   scale."
 - **Client JS budget: 5 kB gzipped for the whole site**, enforced by
   `tools/check-budget.cjs` in the build. **Measured: 2,672 B** (the one
-  bundled script, 1,119 B, plus Astro's inline hydration shim on the-floor,
+  bundled script, 1,119 B, plus Astro's inline hydration shim on the-tilt-gap,
   1,553 B; the nine bytes over the earlier 2,663 are `drift()` moving into
   `src/lib/rose.mjs`, below). The rose must be computed live and the axis must move with the
   reader; that is the only JavaScript the brand earns.
@@ -260,7 +289,8 @@ for a shortlist for bios and cards, which is a separate deliverable.
 
 ## File map
 
-- `src/config.mjs`: the origin, name, author, and `BUILD`, the first eight
+- `src/config.mjs`: the origin, name, author, the channel's `NARRATOR` (the
+  one place the voice is written), and `BUILD`, the first eight
   characters of `VERCEL_GIT_COMMIT_SHA` ("dev" locally), shipped as
   `<meta name="build">` by `src/layouts/Base.astro`.
 - `src/lib/editions.mjs`: **the editions, once.** Home, feed, llms.txt,
@@ -333,7 +363,11 @@ for a shortlist for bios and cards, which is a separate deliverable.
   alignment is scored and a chunk whose audio does not say its words is
   spoken again, then fails the run, because forcing always "succeeds" and
   the first version's fallback could never fire (review, 2026-10-17); chunks
-  are cached and the daily quota exits 75), `voice-samples.mjs`
+  are cached and the daily quota exits 75; or ElevenLabs through
+  `narrate_eleven.py` when `NARRATOR` is `eleven:<voice id>`, the channel's
+  voice since 2026-10-17: one request a block, every word's time from the
+  reply's character times, the same wav2vec2 gate, a block cache, spent
+  credits exit 75), `voice-samples.mjs`
   (the same passage in every candidate voice, filed under the Release
   `voice-samples`: Kokoro, Gemini, and an ElevenLabs voice designed from
   the Gemini analyst's own description with a fixed seed, so the paid
@@ -443,12 +477,13 @@ for a shortlist for bios and cards, which is a separate deliverable.
   With `skip_voiced` it does nothing for an edition whose release already
   names the voice. It no longer runs when the file itself changes: a proof
   render spent a day's quota (2026-10-17).
-- `.github/workflows/film-queue.yml`: every morning at 08:20 UTC, after
-  the free tier resets at midnight Pacific, runs `film.yml` once per
-  published edition from `src/lib/editions.mjs`, oldest first, one at a
-  time, with `skip_voiced`. The day's ten requests go to the first films
-  not yet in the voice; the rest wait for tomorrow. Once every film is
-  voiced a run is seven quick skips.
+- `.github/workflows/film-queue.yml`: every morning at 08:20 UTC runs
+  `film.yml` once per published edition from `src/lib/editions.mjs`,
+  oldest first, one at a time, with `skip_voiced`, so every edition not
+  yet in the channel's voice is rendered and filed; once every film is
+  voiced a run is seven quick skips. Written for Gemini's ten requests a
+  day; on ElevenLabs one run can voice them all, and the schedule stays
+  as the net for new editions and for a run stopped by the credits.
 - `.github/workflows/release.yml`: **the filing system for films.** A
   GitHub Release per edition named `film-<slug>`, holding the film, the
   Short, captions, sheets, meta and thumbnail as assets: permanent where
@@ -870,6 +905,39 @@ for a shortlist for bios and cards, which is a separate deliverable.
    edition has been checked yet. Flipping `draft` is one line in
    `src/lib/editions.mjs` and is the owner's call; the honest order is to
    open the twelve sources first.
+   **Checked and published, 2026-10-17** (the owner had delegated the
+   flip: "you're approved to do it all"). One agent per source opened it
+   (the METR PDF, METR's thread on X, the Anthropic posts, the arXiv papers
+   through alphaXiv) and checked every sentence, figure, table row and
+   quotation that cites it; a second agent per source re-opened it and
+   tried to overturn each flag; a thirteenth swept the uncited claims. Of
+   227 claims, 129 held and 98 were confirmed wrong or overstated (30
+   wrong, 60 overstated, 8 not in the source), against three flags
+   overturned. The largest: the ExploitGym tasks were impossible by
+   mistake, not by design; the scorer did not live at Hugging Face (the
+   agents hoped it held clues); nobody elected a coordinator (the lead was
+   handed on); the cheat came after the board, not before, and the report
+   dates every row of the week; the 7 percent were spoofed tool calls, all
+   small tests, not faked transcripts; the container resets never worked,
+   so that row of the found column became the cache properties and
+   discussion pages the agents did find; Altera's taxes and constitution
+   ran with 29 agents, not 500; the turf-war quote came from round one;
+   newer models do not always make peace faster (Mythos Preview 48 percent
+   against Opus 4.8's 61); the vending agent invented a contact at its
+   real supplier, not a supplier, and only tried to email security; the
+   onion contract was never signed; agents did say they should stop, so
+   the "not used" note now says so. Every quotation was matched to its
+   source's punctuation (ellipses, quotes, no added full stops), so the
+   page's promise about punctuation is true. Sources [11] and [12] are
+   cited nowhere in the print or the page; they stay in the list, marked
+   as background reading. Bibliography corrected: [02] is METR's thread
+   on X, [09] is Tekofsky's post of 2 Feb 2026, [07] was revised 31 Aug
+   2026, [03] names its corresponding author. The print PDF is left as
+   issued and still carries the uncorrected text. The date stays the
+   print's, as for every ported edition. Its film (13.6 minutes, 1,906
+   credits) and Short went up the same night into the two queues' free
+   slots: the film at 15:00 UTC on 24 October, the Short at 03:00 UTC on
+   26 October.
 
 0f. **Edition 09 · The Countersign arrived as a finished print
    (2026-10-16) WITH its own verification pass**, eighteen pages,
@@ -908,6 +976,47 @@ for a shortlist for bios and cards, which is a separate deliverable.
    **Editions 07 and 08 never arrived in this repo.** Nothing is missing
    from the site: the code is the date, so the sequence the prints carry
    is not a sequence the site keeps. Recorded so nobody hunts for them.
+
+0g. **Edition 02 · The Subtraction, sourced from scratch (2026-10-17 to
+   18).** It had no sources at all: the print was a chassis marked FACTS
+   PENDING, the table held "not yet sourced" cells, and the draft predated
+   the CMP 170HX's public unlock. Five researchers by topic (the GA100 and
+   A100 columns, the locked card, the unlocked card and the law, the lock
+   mechanisms, the history) each sourced every claim in their area, and a
+   skeptic per area re-opened every source: 152 claims, 72 held as
+   written, the rest corrected, cut or marked n/a, with the skeptics
+   overturning 10 researcher calls. The 2026 events changed the argument
+   and the page says so: Jon Pry's paper (Zenodo, 26 June 2026) showed the
+   one time programmable fuses are only read by firmware, cmpunlocker
+   (GitHub, August) lifted compute, memory and one step of PCIe in
+   software, and LTT Labs (12 September) reached 64 GB on an 8 GB card, so
+   "if that report is correct then the limits are not reversible in
+   software at all" became its opposite, and section 06 now reports one
+   named test where it said "forum reports". The lane width is a board
+   cut: capacitors for twelve lanes were never fitted. Also corrected:
+   Intel's upgrade card was 2010, on the shop shelf, not 2011 in the box;
+   IBM's key is an encrypted configuration record; the A100 40GB base
+   clock is 765, not 1065; the 80GB PCIe bandwidth is 1.94 TB/s, not up
+   to 2.04 (that is the SXM board); the full die is HBM2 and has no
+   published clock, so no FP32 figure; "most of what the public calls
+   artificial intelligence" became two models the A100 is documented to
+   have trained; "a quarter of its worth" became "a fraction" (the one
+   like-for-like comparison puts it at a third to a half); the price
+   moved from "$400 to $800" today to a few hundred until mid 2026 and
+   $1,300 to $1,700 in September (LTT Labs), dated, because eBay could
+   not be read from the sandbox. The table is now the 8 GB card locked
+   and unlocked, with every column's sources under it. Two display lines
+   were cut to twelve words. The page carries Edition 06's citation style
+   and a sources list; no print is issued, so `pdf` stays null. The
+   cmpunlocker forks carry a line addressed to AI agents; the researchers
+   ignored it and cited only the original repository. An adversarial
+   review of the rewrite (three lenses, every finding refuted or upheld)
+   then confirmed 33 more defects, three blocking (the print code still
+   on the page, section 03's opener contradicting its own mechanisms, and
+   the 10 GB card's 40 GB limit stated without Pry's stable 80 GB), all
+   fixed before merge, with four sources added for 36. Its film (18.3
+   minutes, 2,852 credits) and Short went up the same night: the film at
+   15:00 UTC on 25 October, the Short at 03:00 UTC on 27 October.
 
 0. **Edition 03 · The Markup arrived as a finished, sourced PDF** (ten
    pages, twelve sources, Chromium-rendered 08:32 UTC) with the same text
@@ -971,9 +1080,66 @@ for a shortlist for bios and cards, which is a separate deliverable.
    (Xu, Mankai and Alouini, arXiv 2605.17349, May 2026), the FCC rule as
    printed, Meshtastic's own preset table and Seeed's price today, and
    never added together. The amendment leaves Edition 03's text and PDF
-   as printed and links both ways through `amends`. The owner must still
-   confirm the video URL against their transcript and set the date on the
-   day it goes live.
+   as printed and links both ways through `amends`.
+   **Checked and published, 2026-10-18.** The video is confirmed from
+   YouTube's own record (title, channel, published 3 Sep 2025, 26:13).
+   Five checkers by area (the video and the vendor, the parts and
+   software, the paper, the rules and LoRa, the page against itself and
+   The Markup) opened every source, and a skeptic per area re-opened every
+   flag: 90 flags, 76 upheld (several found by more than one checker), 14
+   overturned. YouTube's automatic captions, read once through its public
+   player interface, stood in for the owner's transcript; soon after,
+   YouTube began asking the sandbox to sign in to prove it is not a bot,
+   and the builder stops there rather than route around it. What the
+   captions settled: the mile and the 2,000 feet are one spot, guessed on
+   foot and then stated in the voice-over, so the page carries 2,000 feet;
+   "enterprise" and "end to end" for WPA3-SAE are the builder's words, now
+   attributed to him and corrected (SAE is WPA3's personal mode, and it
+   covers each hop; Cisco's WPA3 guide and the vendor's own security
+   table); the Pi 4 was chosen because, he said, some OpenWrt firmware did
+   not quite work on the 5, and OpenWrt does run there now, so the page
+   names OpenMANET as what still lists no Pi 5; his dual-band dongle is his
+   claim beside the vendor's current 2.4 GHz part. Also corrected: the
+   slap applied The Markup's two-node forty-four to one radio; the two
+   benches were eight months apart, not a year, and KAUST's was a field
+   test, nowhere "indoors"; 1 MHz is the steepest step down, not an
+   exception; the paper predicts nothing about his radio, and his readings
+   sit above it; Meshtastic's rates are rated maxima, not throughput, and
+   no Meshtastic node runs on a coin cell; the closing line put fifteen in
+   the field; and the vendor had already written down a rule of thumb (40
+   to 60 percent of the physical rate, in his repository since 26 Feb
+   2026) and a rough real-world figure, so the datasheet is where The
+   Markup looked, not all there was. The builder benched the MM8108 itself
+   in January 2026, and those numbers are in no text (the vendor's site
+   and repositories, the press and the community were searched); they sit
+   behind YouTube's wall. The chipmaker's are not: Morse Micro's SDK
+   release notes of 2 Sep 2026 measured the MM8108 at 8 MHz at up to 30
+   down over UDP, and its chips page calls 43.3 a PHY rate, "not the data
+   rate your application will receive", so the amended row carries four
+   numbers and the chipmaker's is one of them. An adversarial review of
+   the result (facts, house rules, a reader's consistency; a skeptic per
+   lens) upheld 26 of 38 findings, two blocking: The Markup's own page
+   never showed its "Amended" note (its masthead dropped the registry's
+   note; it now renders it, as The Hand in the Water's does), and the Pi 5
+   sentence overreached its source (the vendor's store sells a Pi 5 on the
+   first chip; the repository says only that the SPI card does not bind).
+   The rest were precision: the chart's 32.5 is an 8 MHz peak, the
+   amended row's "about one" is the downlink, the $208 to $450 now carries
+   its read date in the prose, the January video has its own source entry,
+   and "the ceiling of a room nobody stands in" became "a ceiling, and
+   links run under it", because floor, ceiling and room under a title that
+   is The Floor came too close to the building pun. Its film (13.1
+   minutes, 1,420 credits, leaving about 16,000 of the month's 40,000)
+   and Short went up the same morning into the queues' next free slots:
+   the film at 15:00 UTC on 26 October, the Short at 03:00 UTC on 28
+   October. One sentence of
+   The Markup was wrong too: RSS-247's higher e.i.r.p. for point-to-point
+   links is for 2.4 and 5.8 GHz only (s. 6.5 a). The Floor amends it and
+   The Markup stays as printed, as it does for the throughput row.
+   Notebookcheck's summary of the builder's later network contradicted
+   his own post, so the post replaced it. The page carries the house
+   citation marks. Prices re-read the day it went live: Seeed $14.99,
+   Parallel $97 and $208 to $450.
 5. **A research file, "The Algorithmic Aedificare" (2026-09-16), was not
    added.** A machine-written survey of organoid computing, acoustic
    metamaterials, 4D mesh generation and robotic timber, framed as the
@@ -1088,6 +1254,11 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
   not the builder's: zero budget is a hard constraint here, and the owner
   has been burned by Google bills before. Nothing in the pipeline changes
   either way.
+- **2026-10-17 · The channel's voice is ElevenLabs, a woman, American.**
+  Override 6 has the reasons and the voice. Recorded here too because it
+  reverses the decision above it within hours: the free tier stopped
+  mattering when the owner paid for the better voice, and nothing had
+  been published, so the switch cost nothing but a morning.
 - **2026-10-17 · What satisfies that duty is the checking, not who did
   it.** Edition 09 arrived with the owner's own verification pass attached,
   evidence included, and the print acting on its corrections. So it
@@ -1099,6 +1270,28 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
   re-checked. **A figure that is a market price is never archival**: it
   carries the day it was read, on the page and in the colophon, and it is
   read again before the edition goes live.
+- **2026-10-17 · The films go up as two queues, a film a morning and a
+  Short an evening.** Six editions' films and Shorts in the channel's
+  voice (all but The Markup's) and the onegov news Short went up private through
+  `youtube.yml` with YouTube's own `publishAt`: films at 15:00 UTC (8am
+  Pacific) one a day from 18 October, Shorts at 03:00 UTC (8pm Pacific)
+  one a day from the evening of the 18th, thirteen videos over a week.
+  The first plan was one queue alternating every twelve hours, and the dry
+  run showed why not: the onegov Short has no film, so every film after it
+  would have landed at 8pm. Two queues keep the hours, and each Short still
+  publishes after its own film because films start twelve hours earlier.
+  Publishing is YouTube's at the scheduled time, so the token expiring does
+  not stop it. The ids are on each release (`youtube.json`,
+  `youtube-short.json`) and not typed here. **The Markup was replaced**
+  (owner, the same evening: "yeah replace the markup with the new voice"):
+  its new film publishes at 03:00 UTC on the 18th (8pm Pacific, the evening
+  before the run starts) and its Short at 21:00 UTC (off both slots), and
+  `youtube-channel.mjs retire` makes each old Kokoro video private only
+  once its replacement is public, never deleted, so the old film's 75 views
+  stay with it. A review caught that the old pair has no file name in the
+  API and would have vanished from matching once the new pair claimed the
+  render, leaving both voices public; the title route now keeps an
+  older-voice video matched.
 
 ## Open
 
@@ -1127,10 +1320,11 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
    not an option. curl works there because it reads the proxy's CA bundle.
    The live sweep is the `verify-live` runner's job; the sandbox can only
    curl.
-2. **Edition 02** stays a draft until its "not yet sourced" cells are
-   sourced. Then set `draft: false` in `src/lib/editions.mjs`, fill the dove
-   with `doveOfRoses()` in a re-render, re-render the PDF from
-   `source/edition-02/` with a font assertion, and add it to `public/pdf/`.
+2. **Resolved 2026-10-18: Edition 02 is sourced and live** (Findings 0g).
+   It ships without a PDF, because no print was ever issued: re-rendering
+   `source/edition-02/` would print the unsourced chassis, not the page. A
+   print of the sourced page, with the dove filled by `doveOfRoses()` and a
+   font assertion, is still possible and is the owner's call.
 3. **Edit the brand kit skill** to record the mark (override 1) so the kit
    and this file agree.
 4. **Taglines**: the owner wants a shortlist for external bios and cards.
@@ -1254,7 +1448,12 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
    to choose by ear before anything else is uploaded, because the films on
    Releases are all in the Kokoro voice and the channel must not change
    voice after it starts publishing; two designed Gemini voices exist in
-   the project for a year from last use.
+   the project for a year from last use. **Uploaded the same evening**:
+   six edition films and their Shorts in the ElevenLabs voice and the
+   onegov Short, scheduled (Decisions log, "two queues"); `list` reads the channel's
+   long uploads as `allowed` and every thumbnail went through, so the
+   channel is verified. The Markup was replaced in the new voice the same
+   evening (Decisions log). Still the owner's: the lasting token.
    **The channel is the owner's existing one** (owner, 2026-09-25: "I'm
    going to use this channel because people like me and follow me
    already"): "OF8 SupraNational Global Conglomerate", 155 subscribers,
