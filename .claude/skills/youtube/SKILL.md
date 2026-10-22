@@ -115,7 +115,11 @@ deletes the old file in Studio if they want it gone.
 
 **A film found wrong after it went up** (its edition's check corrected
 the page): `youtube.yml action=withdraw set="film-edition-01:film"`
-makes it private now, never deleted, each write read back. Correct the
+makes it private now, never deleted, each write read back; an earlier cut
+still out (an older voice, or superseded) is named by its video id
+instead, and only one of ours can be named: matched to one of our renders,
+or an earlier cut whose corrected title no longer matches but whose
+generated description still links aedificare.art. Correct the
 page and merge, then render again on `main` (`film.yml slug=<slug>`; the
 narration cache keeps the blocks that did not change, so only the
 corrected ones spend credits), then `youtube.yml action=upload
@@ -128,6 +132,14 @@ public. A held video's replacement needs no withdraw; it is already
 private. The owner deletes superseded files in Studio if they want them
 gone.
 
+**If the site links the film** (its edition's entry in
+`src/lib/films.json`), the page must not keep linking it: the same day a
+linked film is withdrawn or superseded, `node tools/films.mjs --drop
+<slug>` and a commit; once the replacement is public, `node tools/films.mjs
+<its id>` and a commit. The tool names the command when withdraw, retire or
+`upload --replace` touches a linked film, and `list` flags any wrong link
+and exits non-zero until the commit lands.
+
 **Hand uploads** still work: the owner uploads the file exactly as
 downloaded from the release, and `youtube.yml action=sync` sets the
 generated title, description with chapters and sources, category,
@@ -138,6 +150,58 @@ Never pass `--privacy public`. A scheduled `publish_at` is the owner's call
 (on 2026-10-17 they asked for the films to go out: "let's get our work out
 there"), and a scheduled video can be changed or cancelled in Studio until
 its time.
+
+## The site's film links
+
+The owner's choice (21 Oct 2026, in chat, from options; CLAUDE.md Decisions log): each edition page
+links its **current** film (the long one, never a Short or an earlier cut)
+with its thumbnail, **once it is public**, and nothing is embedded. Public
+is known only from the channel, so:
+
+- The morning a film publishes, read `list`: it names each public current
+  film the site does not link yet. Then `node tools/films.mjs <id>` (it
+  matches the id to its release's `youtube.json`, measures the film's
+  length from the MP4 on the release, rounded up as YouTube shows it, and
+  reduces the thumbnail), build, and commit `src/lib/films.json` and
+  `public/film/`.
+- `list` (and every command but `probe`) judges every link: on the channel, public, the film
+  its release files, as long as the link says. A `SITE LINK WRONG` line
+  names the command that sets it right; do it the same day.
+- `verify.yml` runs `node tools/films.mjs --check --online`, which fails a
+  link whose release's ledger now names another video, and warns when a
+  render or re-cut has been filed onto the release since (the video, and
+  the link, are unchanged until the new render goes up and is linked).
+- The owner chose the plain link over a click-to-play facade and a full
+  embed; do not add either without their say.
+
+## Titles, descriptions, and one public cut per edition
+
+The owner's rules (20 Oct 2026, CLAUDE.md Decisions log):
+
+- **A title names its subject inside the first 40 characters** (a phone
+  shows about that much): the company, product or named problem first,
+  the edition's own line after it where it works, 70 characters or
+  fewer. Nothing in a title that the film does not say: check it against
+  the keeper's own `captions.srt` on its release (those are the
+  narration's words, exactly), and against the edition's corrections in
+  CLAUDE.md's Findings. Never fetch captions from YouTube.
+- **Titles are typed once**, as `youtube: { film, short }` on the edition
+  in `src/lib/editions.mjs`. Never retitle in Studio or by hand through
+  the API: the next sync sends the release's words and undoes it. The
+  route is `film-meta.yml` (dry, then not), which refiles `meta.json` on
+  the release, then `youtube.yml action=sync dry=true`, which prints every
+  title and description change, then the owner's "go", then the sync.
+- **The description opens with the edition's link**; an amendment and
+  what it amends name each other next. Both are generated
+  (`tools/lib/film-meta.mjs`).
+- **One public cut per edition.** A superseded cut goes unlisted or
+  private, never deleted (`withdraw --privacy unlisted` with the cut's
+  video id, or `retire --privacy unlisted`, which only lowers a cut that
+  is public once its replacement is), and the owner chooses per film:
+  unlisted keeps a link already shared working, private keeps a cut whose
+  claims a check removed out of reach. A cut with real views is always
+  the owner's call. Once a release is retitled, an earlier cut that
+  matched it only by its old title lists as "no render": reach it by id.
 
 ## What must be true before a render goes up
 
@@ -186,11 +250,20 @@ no conclusion about the channel.
 ## Quota
 
 10,000 units a day per project. A list costs a few units. A sync that
-changes a video costs about 500 (update 50, captions 400, thumbnail 50).
+changes a video costs about 500 (update 50, captions 400, thumbnail 50),
+and about 50 when only its words differ on the video its release's
+ledger names: then only the words go up (`--meta-only`), so a retitle of
+every film costs about a tenth of a day. A hand upload keeps the full
+update.
 An API upload costs about 500 more (since 1 June 2026 videos.insert has
 its own bucket of 100 a day; captions, thumbnail and listing come out of
 the 10,000). A full sync of every release fits in one day; a second forced
-sync the same day may not. The voice has its own limit: the ElevenLabs
+sync the same day may not. It ran out once, on 18 October 2026: fourteen
+uploads in one Pacific day, with their caption tracks and thumbnails and the
+day's syncs, holds and list runs, and the last three caption tracks failed
+while the videos went up. So plan about a dozen uploads a day, and leave a
+list run's worth of room to confirm them. The day resets at midnight
+Pacific (07:00 UTC in October). The voice has its own limit: the ElevenLabs
 plan's monthly credits (the run's log prints what it spent and what is left).
 
 ## When something fails
@@ -205,8 +278,21 @@ plan's monthly credits (the run's log prints what it spent and what is left).
   run continues once credits are back; tell the owner the reset date. A run that fails on "would not align after 3 tries" means
   Gemini keeps saying that chunk differently from the text: look at the
   chunk's words (a token spelled oddly) and fix the spelling or the text.
+- An upload or sync run is green but its log says `captions failed (the
+  video is up)` or `thumbnail failed`, and Actions shows a warning: the
+  video is on the channel without them. The render's ledger
+  (`youtube.json`, `youtube-short.json`) now carries `owed`, `list` marks
+  the video OWED, and the next `youtube.yml action=sync` sends what is owed
+  and files the ledger again without it. A ledger filed before this
+  existed (the three NS caption tracks of 18 October) says nothing is
+  owed, so that sync is forced: `action=sync only=<release> set=force`,
+  which resends both of the release's videos, about 500 units each. A
+  video no ledger on its release names (a hand upload matched by file
+  name or title) cannot record a debt either: the run's warning says so,
+  and it too needs `set=force`.
 - Thumbnail 403: the channel is not phone-verified. The video still
-  updated.
+  updated, and the ledger owes the thumbnail until a sync after
+  verification sends it.
 - A video shows `no render`: it was uploaded under another file name and
   title. If it is one of ours, the owner can set its title to the
   render's, or run `node tools/upload-youtube.mjs <meta.json> --update <id>`

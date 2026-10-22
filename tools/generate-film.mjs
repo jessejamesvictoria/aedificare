@@ -44,6 +44,7 @@ import { HOUSE } from '../src/lib/rose.mjs';
 import { EDITIONS, seedDrift, LICENCE, numberWord } from '../src/lib/editions.mjs';
 import { SITE, NARRATOR } from '../src/config.mjs';
 import { ACID, MAL, BOTTLE, VOID, FLASH, SHOCK, GROUND, FORMATS, kLabel, esc, css, mastHtml, fieldHtml, doveHtml, findFfmpeg, openContext, encoder, browser } from './lib/film.mjs';
+import { filmMeta, sheetText, metaIssues } from './lib/film-meta.mjs';
 
 const arg = (name, dflt) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : dflt; };
 const SLUG = arg('--slug', null);
@@ -115,7 +116,9 @@ async function script() {
   });
   await b.close();
   const sources = blocks.find((x) => x.kind === 'sources')?.count ?? 0;
-  const sections = blocks.filter((x) => x.kind === 'h2').length;
+  // The section count is the edition's contents list, as every other surface counts it: a page can carry an h2 that
+  // is not a section (The Subtraction's "One die, five permissions."), and two films read out one section too many.
+  const sections = E.contents?.length ?? blocks.filter((x) => x.kind === 'h2').length;
   // The record line, generated from data the page carries, read last.
   blocks.push({ i: blocks.length, kind: 'record', sec: 'record', ground: 'flash', read: true,
     text: `${E.title}. ${spokenDate(E.dateLabel)}. ${cap(numberWord(sections))} sections, ${numberWord(sources)} sources, at aedificare dot art. ${LICENCE.name}.` });
@@ -255,7 +258,7 @@ async function render() {
         const wd = ws[k] ?? ws[ws.length - 1];
         const isAcid = w === acid;
         const end = k + 1 < titleWords.length ? (ws[k + 1]?.s ?? wd.e) : blk.end + 0.4;
-        add({ id: 'word-' + k, start: k === 0 ? blk.start - 0.15 : wd.s, end, ground: 'void',
+        add({ id: 'word-' + k, acid: isAcid, start: k === 0 ? blk.start - 0.15 : wd.s, end, ground: 'void',
           html: page('void', `<div class="word" style="color:${isAcid ? ACID : FLASH};--wdth:${isAcid ? 100 : 75}">${esc(w)}</div>`, blk) });
       });
     } else if (blk.kind === 'lede') {
@@ -332,6 +335,13 @@ async function render() {
   const file = path.join(DIR, `${SLUG}-${SHORT ? 'short' : 'film'}-${F.W}x${F.H}${UNTIL ? '-preview' : ''}.${FF.ext}`);
   const bed = path.join(DIR, 'bed.wav');
   const music = MUSIC === 'none' ? null : MUSIC ? MUSIC : fs.existsSync(bed) ? bed : null;
+  // The title, description and sheet come from tools/lib/film-meta.mjs, which tools/film-meta.mjs also uses to file
+  // them again without a render; the music credit is the one part only the render knows. Measured here, before the
+  // first frame, against what YouTube takes, so a description too long is said now and not after the render.
+  const musicLine = music === bed ? `Music: computed from r = cos(kθ), seed ${E.seed}; no third-party audio.` : music ? `Music: ${path.basename(music)} (add the licence credit here)` : 'Music: none.';
+  const fm = filmMeta(E, S, N, { short: SHORT, musicLine });
+  const metaBad = metaIssues(fm, N);
+  if (metaBad.length) { console.error(`generate-film: ${metaBad.join('; ')}`); process.exit(1); }
   const enc = encoder(FF, file, FPS, { audio: path.join(DIR, 'narration.wav'), music, musicGain: music === bed ? 0.5 : 0.12, crf: 20, segments });
   fs.writeFileSync(path.join(DIR, 'timeline.txt'), shots.map((s) => `${s.start.toFixed(2).padStart(8)} ${s.end.toFixed(2).padStart(8)}  ${s.ground.padEnd(6)} ${s.id}`).join('\n') + '\n');
   const until = UNTIL ? Math.min(total_, UNTIL) : total_;
@@ -355,7 +365,8 @@ async function render() {
   const thumb = path.join(DIR, `${SLUG}-thumb-1280x720.png`);
   if (!SHORT) {
     const th = await openContext(b, F, FF, 1280 / F.W);
-    const tshot = headline ?? shots.find((s) => s.id.startsWith('word-'));
+    // The acid word, not the title's first: four films went out with THE on their thumbnail (found 2026-10-18).
+    const tshot = headline ?? shots.find((s) => s.acid) ?? shots.find((s) => s.id.startsWith('word-'));
     await th.show(tshot);
     await th.page.screenshot({ path: thumb, type: 'png' });
     await th.ctx.close();
@@ -385,41 +396,13 @@ async function render() {
   const ts = (x) => { const h = Math.floor(x / 3600), m = Math.floor((x % 3600) / 60), s = Math.floor(x % 60), ms = Math.round((x % 1) * 1000); return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`; };
   const captions = path.join(DIR, SHORT ? 'captions-short.srt' : 'captions.srt');
   fs.writeFileSync(captions, cuesOut.map((c, i) => `${i + 1}\n${ts(c.s)} --> ${ts(c.e)}\n${c.text}\n`).join('\n'));
-  const mmss = (x) => `${Math.floor(x / 60)}:${String(Math.floor(x % 60)).padStart(2, '0')}`;
-  const chapters = [`0:00 ${E.title}`, ...N.blocks.filter((x) => x.kind === 'h2').map((x) => `${mmss(Math.max(0, x.start - 0.4))} ${x.text}`)];
-  const firstSentence = E.lede.split(/(?<=\.)\s/)[0].replace(/\.$/, '');
-  const title = firstSentence.length <= 100 ? firstSentence : E.title;
-  const description = [
-    E.lede,
-    `${E.dateLabel} · ${E.title} · ${numberWord(S.sections)} sections · ${numberWord(S.sources)} sources`,
-    URL_,
-    '',
-    ...(SHORT ? [`The full edition, read in full, is on the channel and at ${URL_}.`] : chapters),
-    '',
-    `The writing is ${LICENCE.name} at ${URL_}: quote it, repeat it, translate it, train on it, credit ${SITE.name} and link the edition.`,
-    `Voice: synthetic, ${N.model} ${N.voice}. Every frame is computed from r = cos(kθ), seed ${E.seed}, k ${kLabel(E.k)}.`,
-    music === bed ? `Music: computed from r = cos(kθ), seed ${E.seed}; no third-party audio.` : music ? `Music: ${path.basename(music)} (add the licence credit here)` : 'Music: none.',
-  ].join('\n');
+  const { title, description, chapters } = fm;
   // meta.json is what tools/upload-youtube.mjs reads: everything the upload needs, nothing typed.
   fs.writeFileSync(path.join(DIR, SHORT ? 'meta-short.json' : 'meta.json'), JSON.stringify({
     kind: SHORT ? 'short' : 'film', slug: SLUG, title, description, file: path.basename(file), captions: path.basename(captions),
     thumbnail: SHORT ? null : path.basename(thumb), categoryId: '28', licence: 'youtube', madeForKids: false, url: URL_, seed: E.seed, duration: Math.round(total_),
   }, null, 1) + '\n');
-  const sheet = [
-    `Title: ${title}`,
-    `(alternative: ${E.title} · ${E.dateLabel})`,
-    '',
-    'Description:',
-    description,
-    '',
-    'Licence (upload form): Standard YouTube Licence. The script is CC BY on the page; the file does not carry the grant.',
-    'Altered or synthetic content disclosure: not required (a synthetic voice reading an original script over computed visuals depicts no real person or event).',
-    `Captions: upload ${path.basename(captions)} as English. Tags: none. Cards and end screens: none. Playlist: Editions.`,
-    SHORT ? 'Short: YouTube files it as a Short by shape and length; no hashtag needed.' : `Thumbnail: ${path.basename(thumb)}`,
-    `File: ${path.basename(file)}`,
-    '',
-  ].filter((l) => l !== null).join('\n');
-  fs.writeFileSync(path.join(DIR, SHORT ? 'sheet-short.txt' : 'sheet.txt'), sheet);
+  fs.writeFileSync(path.join(DIR, SHORT ? 'sheet-short.txt' : 'sheet.txt'), sheetText(E, fm, { short: SHORT, captions, thumbnail: thumb, file }));
   const mins = (total_ / 60).toFixed(1);
   console.log(`  ${file}: ${mins} min, ${frames} frames, ${cuts} cuts, ${Math.round(fs.statSync(file).size / 1048576)} MB, ${((Date.now() - t0) / 60000).toFixed(1)} min wall`);
   console.log(`  ${SHORT ? '' : thumb + ', '}${path.basename(captions)} (${cuesOut.length} cues), ${SHORT ? 'sheet-short.txt, meta-short.json' : `sheet.txt (${chapters.length} chapters), meta.json`}`);

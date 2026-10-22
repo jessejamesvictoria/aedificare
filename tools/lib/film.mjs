@@ -18,16 +18,26 @@ import { markPath } from '../../src/lib/rose.mjs';
  * developer machine install it with `npm i --no-save playwright`, where it
  * resolves by name; the build sandbox has it at a global path. Try the name
  * first, then the sandbox path, so the same tool runs in all three places.
+ * `opts` go to chromium.launch unchanged (tools/capture.mjs passes its proxy).
  */
-export async function browser() {
+export async function browser(opts) {
   const require = createRequire(import.meta.url);
   let mod;
   try { mod = await import(require.resolve('playwright')); }
   catch { mod = await import('/opt/node22/lib/node_modules/playwright/index.mjs'); }
   // require.resolve lands on the CommonJS entry, whose exports arrive under `default`.
   const pw = mod.chromium ? mod : mod.default;
-  return pw.chromium.launch();
+  return pw.chromium.launch(opts);
 }
+
+/**
+ * Chromium's switch for grey antialiased text, for `browser({ args: [GREY_TEXT] })`. Left to itself Chromium on
+ * Linux draws text with LCD subpixel antialiasing, a blue fringe down one side of every stroke and an orange one down
+ * the other: colours the kit does not have, on our own type and on a capture of our own page alike. With the switch
+ * an edge pixel is the type's colour mixed with its ground. The re-cut (tools/cuts.mjs) renders its inserts with it
+ * and tools/capture.mjs shoots pages with it (2026-10-20); the edition films and the episodes render as they did.
+ */
+export const GREY_TEXT = '--disable-lcd-text';
 
 export const ACID = '#CCFF00', MAL = '#00B24F', BOTTLE = '#063B22', VOID = '#050A06', FLASH = '#FFFFFF', SHOCK = '#FF1F5A';
 export const GROUND = { void: VOID, bottle: BOTTLE, flash: FLASH };

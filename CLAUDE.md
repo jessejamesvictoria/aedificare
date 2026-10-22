@@ -32,15 +32,16 @@ Shipped (2026-09-15):
 | `/the-fourth-axis` | 6 Oct 2026 · *The Fourth Axis* (printed as Edition 05), twelve sections, thirty-eight sources, three registers | live |
 | `/the-tilt-gap` | 3 Oct 2026 · *The Tilt Gap* (printed as Edition 04), fifteen sections, fifty-one sources, F/I/Q marks | live |
 | `/the-floor` | 18 Oct 2026 · *The Floor*, amends The Markup with the builder's own field numbers, ten sections, sixteen sources | live (2026-10-18, every source opened, the video checked against its captions) |
-| `/edition-03` | 15 Sep 2026 · *The Markup* (printed as Edition 03), eight sections, twelve sources | live |
+| `/edition-03` | 15 Sep 2026 · *The Markup* (printed as Edition 03), eight sections, twelve sources | live (2026-10-18, every source opened, 29 claims corrected; the two lines The Floor answers stay as printed) |
 | `/edition-01` | 11 Sep 2026 · *The Snapshot Problem* (printed as Edition 01), twelve sections, thirty-four sources, three registers | live (2026-10-18, every source opened, 56 of 63 flags upheld and corrected) |
-| `/ns-01` | 11 Sep 2026 · *The Hand in the Water* (printed as NS-01) | live |
-| `/ns-02` | 13 Sep 2026 · *The Closest Humans* (printed as NS-02), amends The Hand in the Water | live |
+| `/ns-01` | 11 Sep 2026 · *The Hand in the Water* (printed as NS-01), eleven sections, fifty-four sources | live (2026-10-18, sourced from scratch, every source that could be opened opened; the three lines The Closest Humans answers stay as printed) |
+| `/ns-02` | 13 Sep 2026 · *The Closest Humans* (printed as NS-02), amends The Hand in the Water, eleven sections, forty-four sources | live (2026-10-18, sourced from scratch, each side of the disputed calls given with its own source) |
 | `/edition-02` | 18 Oct 2026 · *The Subtraction* (printed as Edition 02), nine sections, thirty-six sources | live (2026-10-18, sourced from scratch; no PDF, none was issued) |
 | `/404` | | live |
 | `/feed.xml` `/llms.txt` `/llms-full.txt` `/robots.txt` `/sitemap-index.xml` `/ai.txt` `/humans.txt` | discoverability | generated or static |
 | `/privacy.txt` | the YouTube uploader's privacy statement, which Google's consent screen needs before the app can leave Testing (2026-10-17); plain text like `humans.txt`, not a page | static |
 | `/index.json` `/og/desk.png` | the index as JSON and the desk's card, for apt.grok.me to fetch and hotlink | generated |
+| `/film/*.png` | each linked film's own thumbnail, reduced and content-hashed, beside a link to its YouTube watch page at the edition's end and on the home (Decisions log, 21 Oct 2026) | generated |
 | `/pdf/ns-01.pdf` `/pdf/ns-02.pdf` `/pdf/edition-01.pdf` `/pdf/edition-03.pdf` `/pdf/edition-04.pdf` `/pdf/edition-05.pdf` `/pdf/edition-06.pdf` `/pdf/edition-09.pdf` | the print editions as uploaded | as uploaded |
 
 ## Brand — source of truth, and the overrides
@@ -81,7 +82,10 @@ that is a reference, not documentation.
    ground section is the analogue; one Acid element at scale per page would
    leave a twelve-section dossier dead below its cover. Enforced by the
    Acid probe in `tools/verify.cjs` (text ≥ 24px or an SVG stroke ≥ 200px
-   counts as "at scale"; 11px labels and 2px rules do not).
+   counts as "at scale"; 11px labels and 2px rules do not; an image counts
+   by its pixels, when its tallest band of Acid ink, drawn at the size it
+   is shown, reaches the capital of 24px type, 16px; a film's thumbnail at
+   that size fails on its own, wherever it sits).
 5. **Theta falls back.** Neither Bricolage Grotesque nor Martian Mono has
    Greek, so the θ in `r = cos(kθ)` renders from the system mono stack. One
    glyph, and the same thing the uploaded PDFs already did. Alternatives
@@ -214,17 +218,31 @@ italic or underline (properties and tags), never centred, durations only
 exclamation in a heading, no emoji, no sentence "Aedificare is", none of
 the banned self-praise adjectives. `tools/check-contents.cjs` keeps every
 contents list true to the built edition, drafts included and every published
-page's meta description within 100 to 200 characters. `tools/verify.cjs` adds
-the computed-style rules: contrast, Acid once per surface, the brand faces
-actually loaded, every rose field live, every field's reduced-motion still.
+page's meta description within 100 to 200 characters. `tools/films.mjs --check`,
+the build's first step, holds `src/lib/films.json` to the published editions,
+each entry to its own edition's release and the thumbnails on disk, and
+`tools/films.mjs --check --online` in `verify.yml` holds each link to what its
+release files now. `tools/verify.cjs` adds
+the computed-style rules: contrast, Acid once per surface and never at scale
+in a film's thumbnail, the brand faces actually loaded, every rose field
+live, every field's reduced-motion still, and no request to any host but the
+page's own.
 
 **Human duties** (cannot fail a build; review by eye on every PR): one loud
 move per surface; never explain what the entity does; twelve words maximum
 in display copy; the dove once per *sequence* (the sweep can count doves per
 page, "sequence" is editorial); no building pun; no tagline; no call to
 action; every source of a ported edition opened before `draft` is
-flipped; and, after `npm run og`, every card whose content did not change
-restored to its committed bytes (see Discoverability). The kit says no tagline and the site has none; the owner has asked
+flipped; after `npm run og`, every card whose content did not change
+restored to its committed bytes (see Discoverability); and a linked film
+kept public and current: the day a film the site links is withdrawn, held,
+retired or replaced, `node tools/films.mjs --drop <slug>` (or the
+replacement's id, once it is public) and a commit. Only the channel can say
+what is public, so no build can fail on it: `tools/youtube-channel.mjs`
+names a wrong link on every command but `probe` (its `list` exits non-zero), withdraw,
+retire and `upload --replace` say so when they touch a linked film, and
+`verify.yml` fails a link whose release now files another video (Decisions
+log, 21 Oct 2026). The kit says no tagline and the site has none; the owner has asked
 for a shortlist for bios and cards, which is a separate deliverable.
 
 ## Stack
@@ -269,14 +287,15 @@ for a shortlist for bios and cards, which is a separate deliverable.
   question before any service is "is it free, and does it stay free at
   scale."
 - **Client JS budget: 5 kB gzipped for the whole site**, enforced by
-  `tools/check-budget.cjs` in the build. **Measured: 2,672 B** (the one
-  bundled script, 1,119 B, plus Astro's inline hydration shim on the-tilt-gap,
-  1,553 B; the nine bytes over the earlier 2,663 are `drift()` moving into
+  `tools/check-budget.cjs` in the build. **Measured: 2,660 B** (the one
+  bundled script, 1,114 B, plus Astro's inline hydration shim on the-tilt-gap,
+  1,546 B; 2,672 until vite 8.3.4's newer rolldown, 21 Oct 2026, and the nine
+  bytes over the earlier 2,663 were `drift()` moving into
   `src/lib/rose.mjs`, below). The rose must be computed live and the axis must move with the
   reader; that is the only JavaScript the brand earns.
 - **WCAG AA on every surface and zero axe-core violations**, enforced by
   `tools/verify.cjs` on every PR and push. **Current state: clean on all
-  eleven counts.** Keep it there. `node tools/verify.cjs --url https://host`
+  thirteen counts.** Keep it there. `node tools/verify.cjs --url https://host`
   runs the same sweep against a LIVE origin over the real network, because
   a deploy status is not a verification; run it after every production
   deploy and before telling anyone the site is up.
@@ -299,6 +318,27 @@ for a shortlist for bios and cards, which is a separate deliverable.
   the neighbour links are derived there, never typed per page (see "The
   code is the date"). `amends: '<slug>'` links an amendment both ways.
   `draft: true` hides an edition everywhere but the build.
+- `src/lib/films.mjs` and `src/lib/films.json`: the films the site links
+  (Decisions log, 21 Oct 2026), keyed by edition: the video id, the length
+  the link shows, the film file it was measured from (its release, name,
+  size, filing time and length in seconds), the thumbnail's two files, size
+  and alt text, and the release asset it was reduced from with that asset's
+  sha256. The JSON is written only by `tools/films.mjs`. The module holds
+  the thumbnail's size (`THUMB`, 112 by 63, and why) and the length rule
+  (`lengthOf`: the file's own length rounded UP, as YouTube shows it; the
+  rounded length in `meta.json` read 18:15 and 13:38 where YouTube shows
+  18:16 and 13:39). It checks the JSON on first use with no network, so the
+  build stops on an entry for an edition that is not published, an id that
+  is not eleven characters or is linked twice, a length that is not the
+  measured one rounded up, a film or thumbnail source that is not the
+  edition's own release, a thumbnail not named for its edition, missing,
+  not 112 by 63 or not the bytes its hashed name says, or a file under
+  `public/film/` that nothing links.
+  `src/components/FilmLink.astro` renders the link at the edition's end
+  and in its entry on the home: the record first ("Film · 18:16 ·
+  YouTube", the length a `<time>` duration), on the baseline of the links
+  beside it, the thumbnail hanging after it; `src/pages/index.json.ts`,
+  `src/pages/llms.txt.ts` and `tools/generate-llms-full.cjs` carry its URL.
 - `src/lib/rose.mjs`: `rhodonea()`, the house configuration, the mark seed,
   the dove outline, and `drift()`, the clock a live field's k follows (a
   5.5 s cycle of amplitude 0.085 around the seed). The ONLY place the curve
@@ -313,7 +353,7 @@ for a shortlist for bios and cards, which is a separate deliverable.
 - `src/layouts/Base.astro`: head, OG via the manifest, licence and
   discoverability links, JSON-LD, skip link, the script.
 - `src/components/`: `Mark`, `RoseField`, `Dove`, `Masthead`, `Section`,
-  `Rail`, `Pull`, `Stats`, `EditionEnd`.
+  `Rail`, `Pull`, `Stats`, `EditionEnd`, `FilmLink`.
 - `src/pages/`: `index`, `the-countersign`, `the-supply-cabinet`, `the-fourth-axis`, `the-tilt-gap`, `edition-03`,
   `ns-01`, `ns-02`, `edition-01`, `edition-02`, `the-floor`, `404`, and the generated `feed.xml.ts`,
   `llms.txt.ts`, `robots.txt.ts`, `index.json.ts` (the index as JSON for
@@ -327,6 +367,9 @@ for a shortlist for bios and cards, which is a separate deliverable.
 - `public/og/`: content-hashed cards; `src/lib/og-manifest.json` maps stable
   path to hashed path and alt text. Generated by `tools/generate-og.mjs`.
 - `public/pdf/`: the uploaded print editions.
+- `public/film/`: each linked film's thumbnail at 112 by 63 and 224 by 126,
+  content-hashed, written by `tools/films.mjs`; `vercel.json` caches it
+  for a year like `/og/`, since a new picture is a new name.
 - `source/`: the print sources as uploaded (`source/edition-02/`,
   `source/ns-01.html`, `source/ns-02.html`) and the desk's prompt
   (`source/desk/prompt.md`, see Open 7), kept out of the deploy by
@@ -345,11 +388,35 @@ for a shortlist for bios and cards, which is a separate deliverable.
   release, 4.3.0, shipped and the entry was removed on 2026-10-06, the day
   a new source-map-js advisory turned CI red and `npm audit fix` took both
   to patched versions, so the allowlist is empty and stays the place a
-  future exemption goes),
+  future exemption goes; on 2026-10-21 three advisories in the
+  `launch-editor` that vite 8.3.0 bundles, one high, turned CI red the same
+  way, and `npm audit fix` took vite to 8.3.4 with its rolldown, postcss and
+  nanoid, the lockfile alone),
   `check-contents.cjs` (every contents entry in
   `src/lib/editions.mjs` must exist as an id and a heading in the built
   edition page, and every published page's meta description must run 100
-  to 200 characters, or the build fails), `generate-llms-full.cjs`,
+  to 200 characters, or the build fails), `films.mjs` (the films the site
+  links, 21 Oct 2026: given the ids that are public, which nothing here can
+  read without the channel's secrets, it matches each to the release whose
+  `youtube.json` files it as the edition's film, so an earlier cut or a
+  Short is refused; reads the film's length from the movie header of the
+  MP4 on the release by range requests (the moov box only, never the
+  gigabyte) and rounds it up, refuses a film file filed after the upload
+  the ledger records (a later render is not that video) or more than a
+  second from `meta.json`'s length; takes the thumbnail's name from
+  `meta.json` and the alt text's word from `script.json` by the rule
+  `generate-film.mjs` uses, checked against the thumbnail's own ground;
+  reduces the thumbnail by an area average in linear light with its own
+  PNG codec, no library; hashes and writes it and `src/lib/films.json`,
+  keeping an entry whose id, film file, thumbnail bytes and size have not
+  changed; `--drop <slug>` takes a film off; `--check` runs first in `npm
+  run build`, and `--check --online`, in `verify.yml`, fails a link whose
+  release now files another video, or whose film file or thumbnail has
+  been filed again or does not measure what the entry says. A ledger's
+  `privacy` and `publishAt` are what the upload sent, not what is true now
+  (The Fourth Axis's still reads private, publishing 22 Oct, while the
+  film is public), so it reads only the id and the time),
+  `generate-llms-full.cjs`,
   `generate-og.mjs`, `generate-marks.mjs`, `generate-social.mjs`,
   `generate-video.mjs` (the silent films), `generate-film.mjs` (the
   narrated films, three steps: script, narrate, render; `--short` for the
@@ -384,7 +451,22 @@ for a shortlist for bios and cards, which is a separate deliverable.
   context, the encoder), `upload-youtube.mjs` (a rendered film to the
   channel through the Data API, from the render's `meta.json`, private by
   default; `--update <videoId>` sets the same generated metadata, captions
-  and thumbnail on a video the owner uploaded by hand), `youtube-auth.mjs`
+  and thumbnail on a video the owner uploaded by hand, and `--meta-only`
+  with it sends only the words, about 50 units where captions and a
+  thumbnail cost about 450 more), `film-meta.mjs` (files a film's title and
+  description again without a render, from the release's own
+  `script.json` and `narration.json`, through `lib/film-meta.mjs`, the
+  function the render itself writes them with, so the two cannot differ;
+  `.github/workflows/film-meta.yml` runs it over the releases, dry by
+  default; `lib/diff.mjs` is the line diff both it and a sync dry run
+  print; a re-cut's credits come from its release's `cuts.json`, and a
+  meta marked as a re-cut with no `cuts.json` fails rather than strip
+  them; `--test`, run by `verify.yml`, builds every published edition's
+  description plain and as a re-cut and fails unless each still carries
+  `Voice: synthetic, <model> <voice id>` at the start of a line, where
+  `film.yml`'s morning skip test and the upload guard read it, and fits
+  YouTube's 5,000 bytes, which the render, the refile and the re-cut now
+  all measure when they file, not only the upload), `youtube-auth.mjs`
   (mints the refresh token once, on the owner's machine, with the upload,
   metadata and read scopes), `youtube-analytics.mjs` (the channel's numbers
   as a report: views, watch time, average view duration, subscribers,
@@ -402,9 +484,34 @@ for a shortlist for bios and cards, which is a separate deliverable.
   is being replaced, waits without anything being deleted; it never
   touches a video that is out and never makes one public; `withdraw`
   makes a named video that is out private at once, for a film found wrong
-  after it went up, and `upload --replace <release>` puts a corrected
+  after it went up (by release, which names that release's current video,
+  or by video id for any earlier cut of ours: one matched to a render, in
+  an older voice or superseded, or one that matches no render but whose
+  description links the apex; `--privacy unlisted` sets an earlier cut,
+  named by its id, unlisted instead, never the release's own video and
+  never one with a publish time, and `retire` takes the same flag and only
+  ever lowers a cut, so one withdrawn to private stays private), and
+  `upload --replace <release>` puts a corrected
   render up beside the video it replaces, which then reads superseded and
-  is retired like an older voice),
+  is retired like an older voice, and holds the replaced video if it was
+  still scheduled, so the two never both publish; what an upload could not
+  send, a caption track or a thumbnail, goes into the render's ledger as
+  `owed`, `list` marks the video OWED, and the next `sync` sends it and files
+  the ledger again without it, because on 18 Oct 2026 the day's quota ran
+  out under three caption tracks and the runs went green; `youtube.yml`
+  forces a sync with `set=force`; a sync whose only difference is the
+  words sends only the words to the video its release's ledger names (a
+  hand upload keeps the full update, since nothing records whether its
+  captions went up), and prints every title and description change line
+  by line, so its dry run is the before and after; and on every command
+  but `probe` it judges the site's film links, `src/lib/films.json`, against the channel,
+  the one place public can be read: each linked video on the channel,
+  public, the film its release files and as long as the link says, or a
+  `SITE LINK WRONG` line naming the `films.mjs` command that sets it right,
+  and `list` exits non-zero; a current film that is public and not linked
+  yet is named with the command that links it; `withdraw`, `retire` and
+  `upload --replace` say so when they take down or supersede a linked film;
+  tried on a mocked channel, 21 Oct 2026, and it writes no link itself),
   `generate-design-system.mjs` (the claude.ai/design bundle, below),
   `episode.mjs` (the news films, override 8: `check`, `sheet`, `narrate`,
   `render`; quote cards with a highlighter, maps from Natural Earth,
@@ -447,6 +554,545 @@ for a shortlist for bios and cards, which is a separate deliverable.
   `upload-youtube.mjs` refuses them before minting a token); chapters are
   listed only as YouTube shows them, three or more and none under ten
   seconds; every file in use with no line in `credits.txt` is named.
+  **The shots live in `tools/lib/shots.mjs`** (2026-10-20): the tag
+  parser, the grade, the quote, map, chart, figure, card, title, slate,
+  end and overlay builders, the footage probes, and the renderer that
+  turns one shot into its own segment, lifted out of `episode.mjs` with
+  no change in what they make, so the edition films' cut lists can build
+  the same shots. What were module globals (the script, the frame, its
+  margins and type sizes, the footage folder) are one context object
+  from `shotContext()`, passed first to every builder. Proved by hashes
+  identical before and after, with no voice called: short-onegov through
+  `episode.mjs render`, wide and Short (284 files: every segment, frame,
+  card, both films, captions and meta, the same as three runs of the old
+  code); softbank-975's shots through the extracted renderer directly and
+  through a copy of `episode.mjs` whose narration throws (1,053 files
+  wide, thumbnails included, and 1,041 tall, on synthetic footage that
+  takes every footage branch), never `episode.mjs render` itself, because
+  its release `script.json` predates the `narrator` field and `render()`
+  would voice it; and every tag of all six episode scripts parsed and
+  built to the same HTML in both frames. **A frame hash can move with no
+  code change**: one run of the old code drew a chart's bars a few pixels
+  differently (at most 6 levels in 255) from a second run of the same
+  code, so a regression that differs from one baseline is checked against
+  a second before the difference counts.
+  **Two kinds for the re-cut** (2026-10-20, spec steps 3 and 4). `pop`:
+  one to three words in Bricolage at weight 800, in a Void field box,
+  left in the upper third and clear of the captions, landing in 120 ms
+  as the width axis steps 75 to 100 (override 3); four transparent
+  stills for the compose; Flash unless the shot beneath spends no Acid;
+  it leaves once its word has been said and read (`popEnd`). `page`: the
+  capture `tools/capture.mjs` wrote, found by the capture's own file
+  name, cropped to the block that holds the words (below), ungraded,
+  on Void under a Malachite mono label
+  (the author where the page or the cut list's `by:` gives one, because
+  fair dealing names the author the source gives (ss. 29.1 and 29.2),
+  then the publisher and the date, or the day it was read; 28 px in
+  the film and 30 in the Short, a long label smaller but never under
+  the floor below, then on two lines growing up (more where two cannot
+  hold it at the floor), broken between its parts so a date keeps its
+  year, the dot between two parts left out where they break, so no line
+  ends on it), an Acid box
+  sweeping each phrase from the word in the narration that says it, one
+  phrase lit at a time, and one linear 5 percent push-in from where the
+  words start. A picture on a source's page is kept out (spec 2.3, row
+  5, text only): one level with the words bounds the window as a
+  neighbour's text does, the picture stops short of one above or below,
+  and any still inside is covered in Void. One on the words themselves cannot be
+  covered without them, so that shot is its quote card in the film and
+  is left out of the Short; `pageView` decides it from the crop the
+  render takes, and `check` asks the same function, so the guard is not
+  a log line. On our own dark pages the bar is drawn, not blended
+  (`litRect`): under each of its boxes a pixel's ink is its distance from
+  the box's ground against the solid ink within three pixels of it, a
+  pixel of Void or Bottle is none, and the bar is its colour moved
+  toward Void by that share, so it is exact Acid wherever the page shows
+  no ink, on Void, Bottle or a field of either, with the words Void and
+  their own edges, as dark type reads under a light page's highlighter.
+  It turns Flash, as exact, where the page's own Acid is in frame, so
+  the shot still spends one Acid. Until 20 Oct it multiplied a grey,
+  inverted copy of the page into the bar, which left it (167,209,0) over
+  Bottle and (197,246,0) over Void, off the kit. **A bar's ends stop
+  short of other ink** (`barEnds`, 20 and 21 Oct). Each end runs 0.14 of
+  the line's height past the line's box (the box holds the words' side
+  bearings, so a bar runs a pixel or two further past their ink), or
+  past the last ink the bar takes where that runs beyond the box, but on
+  the crop's own pixels it stops on a clean column before the first
+  other ink (the next glyph, the next word, a rule). The pad had lit
+  part of the colon after "numbers", of the colon after "print" and of
+  the quote marks round "I Built ... $106.23" on our pages, and part of
+  a comma or a full stop beside the words on six of others'. Other ink
+  the pad would reach that is a mark (a comma, colon, full stop or quote
+  mark: ink running, through gaps of one clean column, to two clean
+  columns within three pads of the box, and reaching neither of the
+  bar's first and last rows, as a rule down the side or the next line's
+  ink would) is taken whole, and the pad runs on past it. Stopped before
+  the mark instead, as on 20 Oct, the bar ended flush on the phrase's
+  last letter while its other end kept the pad ("numbers" before its
+  colon, "documentation" before its comma, "Starlink" before its full
+  stop). A mark with no clean column between it and the phrase (a comma
+  kerned into the last letter until they share a column or touch: The
+  Markup's "network,", The Floor's "Alouini," and "page,", Seeed's
+  ",powered", Geeky Gadgets' "ATAK,") cannot be parted from it by a
+  straight end, so where a clean column ends it within two pads the bar
+  takes it whole, rather than cut it in two, and runs the pad past it
+  too. Each line's bar is drawn into the picture, not clipped over it:
+  its own copy of the crop has the page's own box, the same left, top,
+  width and height, clear but for the line's box, where it is the page,
+  lit between the bar's ends and left as the page for three pixels past
+  each, and is clipped to the line's box (`clip-path: inset()`), so the
+  clip's ends fall on pixels the two pictures share and the bar's end is
+  a boundary between two of the crop's pixels, which the frame resamples
+  as it does the page. Clipped over the page at a fractional place, an
+  end had mixed the bar, the ground and a glyph's edge in one pixel. On
+  20 Oct the copy sat in a box of its own, set back by that box's place,
+  so it stood where the page is only in sum: Chromium keeps each offset
+  to a 64th of a pixel and rounds a background's top and bottom to whole
+  pixels, and where the two sums fell either side of a half (Geeky
+  Gadgets' "internet access via uplinks like Starlink", 115, and the
+  protection table in Parallel's repository, 156) the copy was drawn a
+  pixel taller than the page, its words half a pixel low and soft; and
+  that box's overflow clip, rounded to whole pixels as well, took part
+  of a row off a bar's top or bottom on our pages. The clip-path is the
+  line's box as it stands. A light page's bar is the page multiplied by
+  Acid in the same copy, no longer a blended box, so a picture's covers
+  go over it. Measured on the pilot's 90 page inserts (84 in the film, 6
+  in the Short, 17 of them quote cards), at each insert's first and last
+  frame and each phrase's first fully lit frame on the film's grid (one
+  exists for every phrase since `sweepPlan` starts a phrase only after a
+  frame has shown the one before it whole: five phrases of The Floor,
+  on lines 66, 125, 132 and 170 and two on line 62's card, were taken
+  over on the very millisecond their sweep finished, never more than 96
+  to 99 percent lit, the end of "for." and a full stop never lit, review
+  of 21 Oct; the phrases after them start up to 34 ms later, or, where
+  the shot is full, the sweeps before them up to 41 ms earlier, line
+  66's 4 ms shorter): glyphs
+  crossed by a bar's end
+  (two of its pixels lit and two untouched, read against the same frame
+  with the bars hidden) fell from 13 at b1aa369, the quote mark after
+  "$106.23" and twelve commas and full stops on others' pages, to none
+  at the 524 ends of the 160 lit frames of page shots; pixels more than
+  3 levels from a kit colour or a mix of two on our own pages, where the
+  other marks were cut only at their edges, fell from 93 to none; and on
+  our 35 page shots every pixel of the bar two or more in from its edges
+  with no ink within three is exact Acid (1,075 had stood one level off
+  where two lines' bars met), and exact Flash on all 35 rendered with
+  the bar forced to Flash (no shot of the pilot keeps the page's own
+  Acid). Against 4934f65 (20 Oct): the shift that best matches each
+  bar's words to the same words with the bars hidden is none for all 262
+  bars, where six had been half a pixel low (on 115 and 156; b1aa369 had
+  nine a quarter or half a pixel across, on our pages); pixels of
+  others' pages lit by a bar whose green, which Acid keeps, differs from
+  the page's by more than 2 fell from 28,748 to 24 at the lit frames
+  first measured (single columns of three frames, at most 8 levels), and
+  read again at the film's real frames from 28,772 to 10, in one column
+  of one frame, at most 11 levels, where b1aa369 has none there (its
+  blended box made such columns too, 8 pixels at an off-grid frame of
+  line 107); none is visible; the first row wholly inside each of the 236 top and bottom
+  edges of our pages' bars is full Acid along its middle, where 12 had
+  been partly dark; ends with no more than a column of the bar past the
+  phrase's ink fell from 19 to one, Seeed's ",powered", whose comma
+  stands one clean column from the word before it; outside the bars
+  nothing changed, and every first frame, every frame with the bars
+  hidden and every quote card is as it was byte for byte. Outside the
+  bars against b1aa369, others' pages moved by at most 10 levels in one
+  strip of one first frame, where the old blended box, at no width at
+  all, still made Chromium draw the page in a group of its own (b1aa369
+  with the blend taken out draws that frame as this does), and by 1
+  level along Chromium's raster tile seams, every 254 pixels, in ten
+  more frames, which shift with whatever else a frame draws. A refused
+  capture becomes the quote card with the same
+  words, its highlighter held until the voice reaches them. Tried on The
+  Floor's captures in both frames with every sample frame looked at, the
+  first versions cut a wide table row at both ends, merged a row's two
+  cells into one bar, doubled the Acid where a phrase ran into bold,
+  pushed the words under the captions to dodge thumbnails, and took the
+  first letter of each line off the left with the push-in; each is fixed
+  and named where the code does it. **The crop snaps to the words'
+  block** (`pageCrop` in `tools/lib/shots.mjs`, rewritten 20 Oct after
+  the pilot's contact sheets showed a letter of the rail beside The
+  Floor's parts table, the end of the card beside Morse Micro's MM6108,
+  the KAUST abstract cut at the left, The Floor's sources list cut at
+  its second column, and, in the Short, The Markup's ledger cut at both
+  ends, where the 896 px panel held 448 CSS px). The capture records the
+  page's layout for it: every visible line of text with its font size
+  and block, the blocks as a tree with the borders they draw, whether
+  they paint a ground of their own (a gradient, or a background colour
+  that differs from what lies behind it) or cast a shadow, their
+  largest rounded corner and their list markers, and the boxes it draws
+  that hold no text (a search field, a painted panel, a rule down a
+  side). The window is the words' paragraph, list item, term and
+  definition, or row of a grid (a table, or a grid of divs: blocks of
+  cells side by side that share their columns with the rows beside them,
+  as Morse Micro's release notes are built), sized by its lines and shown
+  whole across. A grid is one unit across: a row's window holds the
+  whole grid, outer rules and all, and another grid level with the
+  window is taken in whole or left out, never cut through a column (an
+  edge inside Meshtastic's preset table cut its left rule and first
+  column, 20 Oct). A grid is as wide as what its rows show, their text,
+  the rules and grounds their cells draw and their bars, not the empty
+  end of a row box wider than its columns (The Floor's bar chart sat left
+  of a 42 px strip). The margins are two ems of the words' type (24 CSS
+  px at least) that stop halfway to anything of another block level
+  with it: text, a
+  picture, an inline SVG chart with the figure that holds it, a box
+  drawn with no text, a box another block paints or frames. A box that
+  holds the words and paints its ground or rules a side keeps the
+  margins inside it, half a pixel and its corner's radius clear, so no
+  margin shows a change of background. Above and below, text the edges
+  would cut is left out, and so is any box they would halve: a top or
+  bottom edge halves a fill, a frame or a rule down a side, a side edge
+  a fill or a frame; a rule across alone is a line, and a table's cells
+  are its grid, kept or left out as rows. A row that draws (its ground
+  or rules, or its cells') keeps what it draws whole or leaves it out,
+  never halved (an edge may stand a few pixels into the next row's box
+  where that row draws only a rule below; the words' own row and the
+  rows of the head that names them are held by where the window is
+  placed, not by this rule): kept by its
+  lines alone, Meshtastic's framed cells ran
+  off the picture's bottom with no rule under them (line 131) and The
+  Floor's parts table ended on a row with its rule left out (55 and 61).
+  The window moves to keep such a row whole where it can, as it does for
+  a line, so line 131 now ends under "Medium Range / Turbo" and the parts
+  table keeps its last row's rule. Text above the heading that
+  opens the words' section (the nearest heading above them in the page's
+  order, a heading element: the capture records no weight, so a bold
+  paragraph set as a heading is not one, and Cisco's "Overall"
+  paragraph stays over its "Supported WPA3 Modes", line 154) is another
+  section's and is left out, and so are the next
+  heading below them and what follows it (RSS-247's "6.4 Hybrid Systems"
+  and its lead-in under 6.3.2's words, the list's items cut off; the
+  "Haven 1" section under Parallel's price paragraph). So is the tail of a list
+  whose first item the picture leaves out (RSS-247's 6.4 list over 6.5's
+  heading), the start of one whose last item it leaves out below the
+  words, and the block just before a list it leaves out whole, the
+  list's lead-in. A list item is one block with the lists inside it,
+  shown whole or not at all (RSS-247's item c ended the picture on
+  "comply with the following:" with its sub-items left out). A figure's caption, a table's caption or head, and a
+  grid of divs' head (a framed row above its rows that shares their
+  columns) stay in the window with the figures they name where the
+  window can move to keep them, the words leaving the band if that is
+  what it takes. Where the words carry a figure nothing in them names
+  (Morse Micro's "24 30", whose units and directions are in the head),
+  the zoom also drops toward the floor to hold both (2.25 to 1.95 there),
+  and where even the floor cannot, the shot is its quote card
+  (`unnamed`). The same holds wherever the words sit in a grid whose
+  head names its columns, bare figure or not, because the picture shows
+  the other columns too (Meshtastic's "11 / 2048" and "4/5" with nothing
+  to say they are a spreading factor and a coding rate; "not stated" in
+  The Floor's parts table with no STATED over it). Held so, the zoom is
+  the largest that keeps the words in the band too, and where none over
+  the floor does, the floor itself, which holds them highest: the parts
+  table's antenna row (line 68) drops from 2.8 to 2.69, its words from
+  72 to 78 percent of the panel to 69 to 75, and its Battery hat row
+  (lines 70 and 139), 275 CSS px under its head, would need 2.08 against
+  the 2.27 its 11 px head reads at, so it drops to 2.27, its words at 71
+  to 81 percent where at 2.64, the largest zoom that fit, they sat at 81
+  to 94, under YouTube's captions. Another grid's rows come with their head too, or are left
+  out: Parallel's table of PHY rates over its 40 to 60 percent line
+  could not be shown whole, because the line's quote bar keeps the
+  window inside the table's left rule, so the line shows alone. Text the
+  side edges would crowd is taken in whole where the window can grow;
+  where it cannot, the window moves across within the other side's
+  margin before a line is left out (Cisco's heading was left out 1.5 px
+  inside the edge with 28 px to spare on the right), and a window at its
+  full width moves toward equal margins where the side it moves to is
+  clear. Both measure from the ink the picture shows, its lines and the
+  boxes drawn whole inside it: the shift that brought Cisco's heading
+  back, measured from the text alone, left its framed note's right rule
+  4.8 CSS px from the edge, and now the note and the heading stand 9.4
+  px from either side. A rule across the picture (a heading's underline, a ruled row)
+  ends inside it with the same margin on both sides or runs off both,
+  never one (Parallel's heading rules ended 1.7 px from one edge and
+  10.3 px from the other); one wider than the widest window, with its
+  block's own text at its end, can do neither, and that block is left
+  out. The highlighter's boxes are the glyphs' line boxes: a Range also
+  returns the box of every element it wholly holds, and a phrase across
+  Morse Micro's cells lit a whole cell as an Acid slab, one across a bar
+  of The Floor's own figures the bar's empty track. Every line
+  shown stays whole through the push-in, and the picture's top and
+  bottom stand halfway between the last line it keeps and the first
+  thing it leaves out, at most two ems past the line; where the window,
+  the push-in or a box sets an edge instead, a line nearer it than a
+  quarter em of the words' type is left out too, so none ends flush on
+  the edge. The push-in never eats a margin: the picture starts inset by
+  a twentieth of its way to where the words start, meets the panel's
+  edge only on the last frame, and the zoom shrinks to allow it. The
+  rest of the panel is Void.
+  **A page shot's type is never under 11 pt on the phone the frame
+  fills**, the smallest size Apple's interface guidelines call legible:
+  30 px in the Short (1,080 px across a phone 390 pt wide) and 25 px in
+  the film (1,920 across the same phone on its side), at most 45 and
+  42. That is every line in the picture, not only the words: the zoom
+  is at least what reads the smallest line of the blocks shown whole (a
+  line of citation marks in 12 px under The Floor's 18 px prose, lines
+  44 and 159), and another block's line that would still show smaller
+  is left out with what stands beyond it (The Markup's 11 px byline,
+  line 125; Morse Micro's 12 px Previous and Next under its version
+  table, 168; a 13.6 px code link in GitHub's list under Parallel's
+  firmware line, 63, whose list and its lead-in then go too). Our own
+  type on the shot keeps the floor as well: the label (above), and on a
+  page shot's quote card the source line, set as the label is and
+  wrapping inside the card; the card's words are 84 and 62 px, and in
+  the Short they wrap as the source line does, inside the panel's
+  width, clear of the right 120 px where the Shorts buttons stand (The
+  Markup's ledger card set "an 8" out to x 1,014.5 until 20 Oct). An
+  episode's quote card is not a page shot and keeps its 22 px source
+  line and its width. A block that cannot be read whole at that size gives way to the
+  cells that hold the words, with the row's label (its first cell) and
+  everything between them, because a figure is not shown without the
+  name of its row (The Markup's ledger showed its 43.3 cell with no
+  "Throughput"), scaled to fit, and where those are too
+  wide as well, the shot is its quote card (`wide`), never a picture of
+  lines cut at both ends; one that stays a sliver of its page at the
+  largest size, even with the blocks around it, is its card too
+  (`small`). A capture made before the layout was recorded fails
+  `check`, which says to shoot it again. `pageView` returns both cards
+  and `check` notes them, and a
+  page shot's card sweeps every phrase on its own word, one lit at a
+  time, as the page would have (it lit only the first). On The Floor
+  that puts seventeen page shots on their cards: five of the Short's six
+  (a Geeky Gadgets list item and The Floor's own paragraph run 625 and
+  738 CSS px of 18 px type where the Short can show at most 512 whole,
+  Morse Micro's spec row 628 px of 13 px type where it can show 370, the
+  ledger's two rows carry an 11 px head, which leaves 313 for a 364 px
+  cell, and the ledger's 43.3 cell with its row's label runs 1,080 px of
+  15 px type where it can show 427), while Parallel's price paragraph
+  shows the page; and in the film the four arXiv shots (the abstract's
+  lines run 1,093 CSS px of 13.6 px type, in a 1,100.8 px blockquote,
+  where the film can show at most 870 whole), OpenMANET's support table,
+  Seeed's price box and the three ledger shots of the 43.3 cell (lines
+  33, 45 and 161: the same 1,080 px, more than the film's 960 of 15 px
+  type), and three whose table's head cannot be held with them
+  (`unnamed`): Meshtastic's Long Fast row (line 130), 650 CSS px from
+  its head, which would take a zoom of 1.14 where the floor for its 16
+  px type is 1.56, and the
+  parts table's Wi-Fi dongle and Total rows (72 and 75), whose 11 px
+  head needs a zoom of 2.27 where 338 and 422 px from head to row allow
+  2.16 and 1.74. Cards
+  that run back to back with no cut between, in the film as in the
+  Short, are set on the two grounds in turn: the second on Bottle, its
+  source line Flash, so it reads as a new picture and not the first one
+  changing its words. In the Short that is the Geeky Gadgets card after
+  the ledger's 43.3 cell (lines 33 and 34) and the ledger's rows after
+  The Floor's paragraph (44 and 45); in the film, the quote card on line
+  174 after the one on 173 (`renderSegment` does it for any two quote
+  cards in a row, a page shot's card among them; no episode script has
+  two). A statement card beside a quote card is not one of those, and
+  both stay on Void, as runs of statement cards do: in the film lines
+  74 and 75, 88 to 90, 129 and 130, 172 and 173, and 176 and 177, two of
+  them (74 and 75, 129 and 130) new since the parts table's Total row
+  and Meshtastic's Long Fast row became cards; whether those joins want
+  the other ground is the owner's call. Every tag and builder of the six
+  episode scripts still parses and builds byte for byte as before, and
+  short-onegov renders to the same 284 hashes. An episode script's
+  `check` refuses both kinds: its timeline places no pop, and capture
+  shoots only an edition's sources. The cut lists (spec step 2) place
+  them.
+  **`tools/capture.mjs` shoots the pages a film shows** (2026-10-20), the
+  capture half of the `page` shot: a cited source in Chromium, 1440 CSS px
+  wide at twice the pixel density, under the honest agent
+  `AedificareFilmBot/1.0`, its text drawn grey (`GREY_TEXT` in
+  `tools/lib/film.mjs`: Chromium's own LCD antialiasing put a blue and
+  an orange fringe on every glyph, colours the kit does not have; on the
+  pilot's 34 captures of our own pages, 4,996,131 pixels stood more than
+  30 levels from any kit colour or mix of two, and shot grey none stands
+  more than 3, every record of their layout the same; the record says
+  `greyText`, and a capture of our own page without it fails `check` and
+  is listed by `pages` to shoot again), the quoted words (`hl:`) found across text
+  nodes and boxed, one PNG and one JSON a shot in
+  `brand/youtube/<slug>/pages/`; `self <n>` shoots our own built page from
+  `dist/` with the network closed. It refuses, records why and asks that
+  host nothing more in the run: YouTube and the streaming services (never
+  fetched, not even a redirect hop), a robots.txt that disallows it, a bot
+  check, WAF challenge, sign-in wall, paywall or ad-blocker prompt, and a
+  check that clears itself by script. Every connection goes through a gate
+  on 127.0.0.1 that refuses those hosts and this machine's own addresses,
+  because a Playwright route never sees a redirect hop and Chromium skips
+  any proxy for loopback unless told not to (both found while building
+  it). Its own addresses however they are spelled (review, 20 Oct): a
+  loopback, private, link-local or reserved literal, IPv4-mapped ones
+  included (`::ffff:7f00:1` passed the first version's pattern), and a
+  name that resolves to one (`localtest.me`, `127.1`), which the gate
+  resolves itself before every connection and then connects to the very
+  address it checked. Behind an upstream proxy (this sandbox, which has
+  no DNS of its own) a name this machine cannot resolve goes to the
+  upstream by name, and lands on the upstream's network, not this
+  machine's. Clean mode hides cookie banners and ad slots by CSS and blocks
+  nothing: blocking ad servers put up Geeky Gadgets' ad-blocker modal over
+  the very sentence the shot was for. Words a reader cannot see fail
+  instead of passing: in a collapsed part of the page, or under an overlay
+  (the topmost element at each box must be the words' own). A closed
+  `<details>` holding them is opened, as a reader would open it; a
+  script's accordion is not. Tried on The Floor's sources on 20 Oct: 12 of
+  the 13 that may be fetched shot clean, eCFR refused at its "Request
+  Access" gate, both YouTube sources refused unfetched, and source 11, The
+  Markup, shot from the build. Morse Micro's "not the data rate" line
+  failed as hidden (it is in a collapsed FAQ answer), so its spec row was
+  shot instead. For the render's crop, each phrase also carries its
+  block, the paragraph or table row it sits in, the page's layout is
+  recorded (every visible line of text, cut by whatever clips it, with
+  its font size and block; the blocks as a tree with their padding,
+  drawn borders and list markers; the boxes the page draws that hold
+  no text; visually hidden text left out), and the pictures in view
+  are counted at any opacity (a lazy image fades in from 0), down to
+  32 px (Geeky Gadgets' sidebar thumbnails are 75 by 42 and were missed
+  at 48), cut by every ancestor that clips them (a carousel's hidden
+  thumbnails reported boxes over the text beside it), and counted again
+  once the PNG exists. Then, on someone else's page, every one of them
+  but inline SVG is painted Void in the PNG itself (`masked` counts
+  them), because that PNG is what the film is cut from and what
+  `recut.yml` files on a public release: no copy of a third-party
+  photograph exists to publish (review, 20 Oct; spec 2.3, row 5).
+  **`tools/cuts.mjs` re-cuts an edition film without a word spoken
+  again** (2026-10-20, spec step 2). A cut list,
+  `source/film/<slug>.cuts.md` (its format is the tool's header), names a
+  phrase of the release's own `narration.json` and the shot that lands on
+  it: any kind of `tools/lib/shots.mjs` but a clip, which carries its own
+  sound. Its front matter pins the narration and the clean film and Short
+  by sha256, because the anchors are word times and the inserts are cut
+  into those exact frames. A cut lands 0.15 s before its word on or
+  before the frame, and holds until the next cut, `until:` or `hold:`;
+  the clean render's computed shots win unless the line says `over: base`;
+  nothing covers the opening field, the title's words, the record or the
+  dove. `check` holds the spec's rules before any frame: every number on
+  a computed surface on the built page's text (spelled numbers read as
+  numbers, the page's SVG left out, so a path's 44.27 is not a fact), a
+  pop's words too; every page shot captured (our own page with grey
+  text) and its words boxed; twelve
+  words on a card, its label counted with it, three in a pop; the
+  owner's footage named in `footage/credits.txt` or refused, its line in
+  the description and the frame line saying the footage is not computed;
+  a page shot's credit naming the page's author, and a `by:` on the
+  source line that leaves that author out said; one Acid at a time (a pop over a shot
+  that spends one turns Flash, and a chart stars one row, because every
+  star is drawn in Acid); no footage in a Short (left out and
+  said); the grammar's warnings and failures (spec 2.2); and each
+  description, credits included, in YouTube's limits and still naming the
+  channel's voice. `render` cuts each insert to a segment of exactly its
+  frames, its type drawn grey (`GREY_TEXT`; measured on the pilot's 148
+  inserts and 13 pops, 435 frames (each insert's first and last, each
+  phrase's lit frame, each pop's four stills, someone else's page left
+  out), the pixels more than 3 levels from a kit colour or a mix of two
+  fell from 7,776,649 with LCD text to 93, each where a
+  highlighter's end, at its start or its end, cut a glyph beside the
+  phrase on our page and three kit colours met in one pixel, 89 of them
+  off before too, and from 93 to none once a bar's ends stopped short of
+  other ink (`barEnds`, above; all 93 were on the page inserts' frames,
+  measured again there); the edition
+  films and the episodes still render as they did), the clean render between them seeked half a frame early so the
+  first frame is the one asked for, joins them without a re-encode,
+  overlays the pops as one sparse layer, and encodes once with the clean
+  render's own sound copied packet for packet (checked after, with the
+  frame count). Its buffer is six seconds of the 8 Mbps cap: at the
+  encoder's 16 Mbit the opening field's dense curves, already compressed
+  once, came out in blocks. It writes the re-cut under the release's
+  usual names with `meta.json` (marked `recut:` with the list's hash),
+  the sheets and `cuts.json`, each insert with its frames, its capture
+  and its credit line. `suggest` drafts a list: a page line per timed
+  citation mark, every rose run over 3.6 s with its words. `pages` names
+  the page tags with no capture yet. Tried on a synthetic list over The
+  Floor's first minute: the Short and a 60 s window of the film, every
+  piece on its frame and every pop on its frames, proved frame by frame
+  against the clean render and the joined picture, the sound identical,
+  and the refile writing the same description the render wrote.
+  **`source/film/the-floor.cuts.md` is the pilot's list** (2026-10-20,
+  spec step 8): 148 inserts over The Floor's clean render, 84 page shots
+  (40 of our own pages, The Floor's and The Markup's, shot offline from
+  the build; 44 of twelve outside sources), 32 cards, 10 charts, 9
+  figures, 4 quote cards and 9 pops. Measured with R4's method on the
+  film: the rose with nothing over it falls from 65.6 to 5.1 percent of
+  the time and its longest run from 37.6 s to 3.1, new pictures rise from
+  7.9 a minute to 16.9 and cuts from 13.8 to 21.7, and the longest stretch
+  in the body with no new picture falls from 40.9 s to 10.6. The Short
+  falls from 49.3 percent rose to 3.1. Choices, so nobody undoes them by
+  accident: the list's hold is six beats, 5.4 s, the point at which a
+  picture reads as standing still; cards keep to four words (sync rule
+  2); a card that sets the builder's own words names him under them
+  ("WHAT HE CALLS IT", as his figure card does), because a frame of
+  "ENTERPRISE. END TO END." alone would put the claim the edition
+  corrects in the brand's voice (review, 20 Oct); sound effects and the
+  cold open are left out, both the owner's call; the two YouTube
+  sources are never fetched: 16 appears as quote cards of the words the
+  edition quotes, which a person confirms before upload, and on one
+  chart's source line (his phone test, line 175 of the cut list), and 01
+  only as a chart's source line; eCFR (09)
+  answered with its wall and is not shown.
+  Captures that failed and were replaced, not forced: Morse Micro's AES
+  and SHA-2 line is hidden like its FAQ, Meshtastic's band line sat under
+  its sticky sidebar, and The Floor's own table caption is visually
+  hidden. ISED answered 502 once and shot clean in a new run. The whole
+  film was rendered here once (32 minutes) and every insert looked at;
+  that caught a first sweep that fell outside its crop (two Meshtastic
+  rows a table apart, now two shots), a wide table cut at its last
+  column, a stat block cut mid-column, type too small to read in The
+  Markup's sources note, and two pops laid over other type (a chart's
+  title, a page's label), each replaced. That render came before the
+  list's last edits, so seven inserts changed after it went unseen, one
+  of them a chart that starred two rows, two Acid bars in one shot
+  (review, 20 Oct; it stars one now, and `check` fails a second star).
+  After the review's fixes the film was rendered again (31 minutes) and
+  every insert looked at again, one frame each on contact sheets, the
+  two inserts the review changed also full size on both sides of their
+  cuts. What those sheets showed at the edges of page shots (a letter
+  beside the parts table, lines 55 and 65; the neighbouring card beside
+  the MM6108's, line 85; the KAUST abstract cut at the left, line 95;
+  the sources list cut at its second column, line 191; the ledger cut
+  at both ends in the Short) was fixed in the crop, not the list
+  (above); every page shot was then captured again and its frame in the
+  film and the Short rendered beside the old one, all 90 looked at, and
+  the Short and the whole film re-cut through `cuts.mjs render` and
+  looked at on contact sheets. A skeptic's pass over those frames found
+  what the crop still let through (a neighbour's SVG chart under
+  Meshtastic's note, the note itself halved because it drew one rule and
+  a fill, not a frame, Seeed's gradient button sliced and a grey strip
+  down the left of its product text, margins the push-in ate to the
+  panel's edge, the bench's unit caption left out, and this file's
+  arXiv figures), each fixed in the crop and the capture as written
+  above; every page shot was captured again and all 90 inserts rendered
+  at their first and last frames beside the old ones and looked at. On
+  the frames of other people's light pages a pixel check found ink
+  under 8 px from the picture's edge in 12 film frames and 1 Short frame
+  before and in none after, and a picture already at the panel's edge
+  on its first frame in 38 film inserts and 1 Short before and in none
+  after. A recheck of those frames found two regressions (an edge inside
+  Meshtastic's preset table, Cisco's heading left out where a 2 px move
+  had room), three older faults (Morse Micro's release notes without
+  their head, an Acid slab over a cell, the tail of RSS-247's 6.4 list
+  over 6.5) and heading rules that ran off one side of Parallel's page,
+  each fixed in the crop as written above; all 90 inserts were rendered
+  again at their first and last frames beside both earlier passes and
+  looked at. The pixel check then found no first frame at the panel's
+  edge and one frame with ink under 8 px from the picture's edge: the
+  last of line 63, where the highlighter stands 6 px in, because the
+  Firmware heading's rule keeps margins of 6 CSS px a side at the type
+  floor. Two more skeptics then read those frames for regressions and
+  for whether the fixes held, and found type under the floor beside the
+  words, another section's heading and lead-in under them, a list item's
+  lead-in with its sub-items cut off, rows shown without their table's
+  head, a framed note's rule 8 px from the edge after the shift for
+  Cisco's heading, and a bar chart left of an empty strip; each is fixed
+  in the crop as written above, and all 90 inserts were rendered again at
+  their first, middle and last frames beside the previous pass's (30
+  changed, 60 pixel-identical) and looked at. A third pair found a row
+  of Meshtastic's framed table cut by the picture's bottom (line 131,
+  and in milder form the parts table's last row without its rule, 55
+  and 61) and the Battery hat row's words under the captions (70 and
+  139); each is fixed in the crop as written above, and all 90 inserts
+  were rendered again at their first, middle and last frames beside the
+  previous pass's (6 changed: 55, 61, 68, 70, 131 and 139; 84
+  pixel-identical) and looked at. One thing seen there stays
+  the list's:
+  the pop "THE CHANNEL" (line 39) stands over the top lines of the
+  Parallel page shot under it in the Short. **The spec's targets disagree
+  on this film**: a rose at 10 percent or less needs about 130 inserts,
+  and the clean render already brings 7.9 new pictures a minute, so new
+  scenes land near 16 a minute against the spec's 6 to 10. The list keeps
+  the rose target, because the rose is what the owner asked to see less
+  of; the scene rate is the owner's to judge on the preview. One of its
+  page shots, Seeed's $14.99 (line 67), is its quote card in the film:
+  the price box is a sliver of the product page at the frame's largest
+  type (`small`).
 - `.claude/skills/youtube/SKILL.md`: how a session runs the channel (the
   credentials check, list and sync, the private lock and the two upload
   routes, what must be true before a render goes up, analytics, quota,
@@ -472,7 +1118,9 @@ for a shortlist for bios and cards, which is a separate deliverable.
 - `.github/workflows/verify.yml`: build (with the three checkers), the
   audit through `tools/check-audit.cjs`, actionlint over every workflow
   (pinned by checksum; the film workflows run unattended and no longer
-  prove themselves on a push), sweep, on every PR and push to `main`.
+  prove themselves on a push), `tools/film-meta.mjs --test`, sweep, and
+  `tools/films.mjs --check --online` (the site's film links against their
+  releases now), on every PR and push to `main`.
 - `.github/workflows/film.yml`: manual dispatch, `slug` and `format`
   inputs, and callable (`film-queue.yml`). Renders a narrated film on a
   clean runner (build, Playwright, ffmpeg, espeak-ng, `uv`) and keeps
@@ -485,7 +1133,9 @@ for a shortlist for bios and cards, which is a separate deliverable.
   warning and files nothing, and the next run continues from the cache.
   With `skip_voiced` it does nothing for an edition whose release already
   names the voice. It no longer runs when the file itself changes: a proof
-  render spent a day's quota (2026-10-17).
+  render spent a day's quota (2026-10-17). It keeps the voice alone as
+  `narration.flac`, which `release.yml` files, because the stem a re-cut
+  that adds time would need lives otherwise only in the 90-day artifact.
 - `.github/workflows/film-queue.yml`: every morning at 08:20 UTC runs
   `film.yml` once per published edition from `src/lib/editions.mjs`,
   oldest first, one at a time, with `skip_voiced`, so every edition not
@@ -516,7 +1166,47 @@ for a shortlist for bios and cards, which is a separate deliverable.
   transcodes any video still at or over the limit to the same cap before
   uploading, so an old render can be filed without an hour's re-render.
   The Closest Humans' film was 2.03 GB, a near miss that the cap now
-  makes impossible.
+  makes impossible. **The clean render is filed twice** (2026-10-20): a
+  fresh render also goes up under base names
+  (`<slug>-film-base-1920x1080.mp4`, `<slug>-short-base-1080x1920.mp4`,
+  hard links, so nothing is copied) with `narration.flac`, and nothing
+  else writes those names. A re-cut is filed with `recut: true` under the
+  usual names with its `cuts.json`, and the job refuses one that carries
+  a base file or the stem. Because every upload clobbers, a re-cut filed
+  under the usual names and cut again would have composed over itself;
+  the base names and the cut list's sha256 pins make that impossible, and
+  a page corrected and rendered again refreshes the base, which the old
+  list's pins then refuse. A fresh render removes a `cuts.json` left by
+  an earlier re-cut. Three guards from the review of 20 Oct: without
+  `recut: true` an artifact that is a re-cut (a meta naming a cut list,
+  or a `cuts.json`) is refused, because filing it the fresh way
+  hard-linked the composite under the base names and deleted its
+  `cuts.json`; with it, the job reads the release's `narration.json` and
+  base files again (GitHub's own sha256 of each asset, or the bytes
+  hashed where an older asset has none) and files nothing unless they are
+  still the ones the cut list pins, so a render filed while the re-cut
+  ran is never covered by a composite of the render before it; and the
+  filing job holds `film-<slug>`, the render's and the re-cut's group,
+  so no two of them write one edition's release at once. The group sits
+  on the job, not on the callers, because a called workflow's group
+  equal to its caller's deadlocks; a job waiting on the group can be
+  replaced by a newer one, and the pin check holds whatever order they
+  run in.
+- `.github/workflows/recut.yml`: manual dispatch, `slug`. Cuts the film
+  and the Short again from `source/film/<slug>.cuts.md` with
+  `tools/cuts.mjs` over the base files it downloads, captures any page
+  shot not yet filed on the Release `pages-<slug>` (and files what it
+  captured; a refusal is asked again next run), checks with `--online`,
+  and files through `release.yml` with `recut: true`. That release is
+  public, so what it files of someone else's page is the PNG the film is
+  cut from with every picture painted Void (`capture.mjs`, above), and a
+  record that does not say so is not filed: chosen over keeping the
+  captures only in an artifact or the cache, which expire and would make
+  a later re-cut shoot the pages again and show something nobody
+  checked, and over filing only the records, which would do the same;
+  our own pages are filed whole. No secret reaches
+  it, it never runs `film.yml` or `tools/generate-film.mjs`, and nothing
+  in it can speak, so it cannot spend a credit.
 - `.github/workflows/episode.yml`: manual dispatch, `slug` input. Checks
   the episode script online, downloads the owner's footage from the
   Release `footage-<slug>`, renders with `tools/episode.mjs`, and files
@@ -528,6 +1218,14 @@ for a shortlist for bios and cards, which is a separate deliverable.
   thumbnail on a video the owner uploaded by hand (not locked by the API
   audit); a push never uploads. The script format and the process are
   `source/episodes/FORMAT.md`.
+- `.github/workflows/film-meta.yml`: manual dispatch, `slugs` and `dry`
+  (true by default). Rebuilds `meta.json`, `meta-short.json` and both
+  sheets on each `film-<slug>` release from that release's own script and
+  narration, and retitles the release; nothing reaches YouTube, which is
+  `youtube.yml action=sync`'s job, dry first. Written 2026-10-20 so a
+  title or description changes in `src/lib/editions.mjs` and reaches the
+  channel in minutes, at no render and no voice credits. It downloads a
+  re-cut's `cuts.json` too, so the refile keeps its credits.
 - `.github/workflows/verify-live.yml`: manual dispatch, `url` input. Curls
   every route and discovery file on the live origin, checks the headers,
   canonical, draft noindex and sitemap exclusion, then runs the same sweep
@@ -614,7 +1312,10 @@ for a shortlist for bios and cards, which is a separate deliverable.
   cannot be checked against the edition, and the ledes already exist. The
   brand rules hold: no Acid on the edition surfaces, block links only,
   small Malachite never on Bottle (the Bottle block's numbers and aside go
-  Flash), nothing explains what the entity does.
+  Flash), nothing explains what the entity does. (Since 21 Oct 2026 an
+  edition with a public film carries its thumbnail there, whose one word
+  or figure is Acid below the probe's "at scale"; whether that still keeps
+  this rule is the owner's to judge by eye. Decisions log.)
 
 - **The code is the date** (owner, 2026-09-16: "I really hate having to
   keep a series going with the numbers that get fucked up instead of just
@@ -725,7 +1426,10 @@ for a shortlist for bios and cards, which is a separate deliverable.
   already a frame generator; the Playwright pipeline was kept because it
   shares `src/lib/rose.mjs` and the client script with the site, and
   Remotion's Chrome and bundle would land in a static site's install path.
-  YouTube's inauthentic-content rule (rewritten 16 July 2026) disqualifies
+  YouTube's inauthentic-content rule (renamed and clarified 15 July 2025,
+  not 2026 as first written here: YouTube's monetization policy page,
+  read 20 Oct 2026; in YouTube's own words, no change in the underlying
+  policy) disqualifies
   templated, interchangeable, mass-produced uploads and readings of other
   people's material; it allows an original script per episode with
   original visuals and one consistent synthetic voice, which is exactly
@@ -1027,6 +1731,67 @@ for a shortlist for bios and cards, which is a separate deliverable.
    minutes, 2,852 credits) and Short went up the same night: the film at
    15:00 UTC on 25 October, the Short at 03:00 UTC on 27 October.
 
+0h. **NS-01 and NS-02, sourced from scratch (2026-10-18).** Both were
+   issued with no sources at all, and both were held off the channel by
+   "A film waits for its edition's check" (Decisions log). Five
+   researchers by range sourced every claim (231 across the two pages:
+   130 held, 101 flagged) and a skeptic per range re-opened every flag and
+   four sampled held claims; two editors applied what survived and gave
+   each page the house citation marks and a numbered list (NS-01 54
+   sources, NS-02 44). An adversarial review of the result (a facts lens
+   and a listener's lens per page, a skeptic each) then upheld 53 findings,
+   some found by both lenses, eight of them distinct blocking defects; a
+   final pass over those fixes (the same two lenses, a skeptic each)
+   upheld 23 minor ones and refuted one. The largest of the last: The
+   Closest Humans called its companion "NS-01", a print code, in a heading,
+   three narrated sentences and a rail key, against "the code is the
+   date", so it now names The Hand in the Water; and two words NPR
+   reported in its own voice had been set in quotation marks as
+   Gómez-Serrano's.
+   **NS-01**: OpenAI went through doors C and D, not C alone (its paper
+   establishes D by a corollary), and two long pieces did carry the force,
+   so the lede "OpenAI opened door C. The world reported door A." became
+   "OpenAI opened doors C and D. Most headlines did not say which.";
+   Saturday was the proof, not an announcement; Fefferman wrote the
+   problem statement, not the rules; the Euler disproof ran inside the same
+   88 hours, after which agents moved onto Navier-Stokes; the statement
+   OpenAI's Lean proves is Google DeepMind's Formal Conjectures encoding,
+   reviewed in public in January before any proof existed, and a named
+   outside check (Savitt, 8 September) found no mathematical change in
+   OpenAI's copy, so "nobody has verified it" became "no referee has
+   checked it"; Perelman's preprints are 2002 and 2003, and he was awarded
+   the prize and turned it down; the rumour was that someone had already
+   solved two problems; "the largest round" is OpenAI's own claim, scoped
+   to Silicon Valley; and the test the page set itself, "a demonstration
+   that the method cannot survive losing the hand", was met on 17
+   September by Constantin, Ignatova and Vicol, which the page now says.
+   CNBC's row left the coverage table because its article could not be
+   read. The three lines The Closest Humans answers stay as printed, per
+   the amendment rule (Findings 0). **NS-02** is about named living people
+   and a disputed private call, so it was held to each side's account with
+   its own source and no motive beyond a source: two calls, not "a phone
+   call" (the lede changed with it); Buckmaster's statement never says
+   which paper Alpöge was to come off, so the beat that called it "most of
+   the fight" now says so and gives Bubeck's "OpenAI's"; the comparison
+   table no longer shows Bubeck asserting the "nice" line, which no text of
+   his addresses; "aggressive", "aimed at", "would rather be doing almost
+   anything else" and "mockery" were characterisations no source supports
+   and are gone; the offers, the text doubting Buckmaster's rationality and
+   who paid for the tools are attributed to Buckmaster; Córdoba's two
+   remarks are no longer joined into one; OpenAI's descent from the Madrid
+   program is reported as Scientific American reported it (the final proof
+   builds its force in a totally distinct way; an earlier, smaller OpenAI
+   team did follow the program); the quasi-Riemann papers went up on 6
+   October, not 7. Both sources notes are mono lines, shown and not read,
+   as The Markup's is, because the film read them aloud and they point at
+   rails and tables a listener never sees. Both prints are left as issued
+   and still carry the uncorrected text. Both share cards were re-rendered
+   because their ledes changed; the one other card the renderer touched
+   (The Countersign's) was restored. **One clause was left alone, for the
+   owner**: NS-02 calls Anthropic "the company that markets itself on
+   trust", with no source. The builder is an Anthropic model, and an
+   opinion about Anthropic is not its to soften or sharpen (Decisions log).
+
 0. **Edition 03 · The Markup arrived as a finished, sourced PDF** (ten
    pages, twelve sources, Chromium-rendered 08:32 UTC) with the same text
    as the owner's Markdown. Ported to `src/pages/edition-03.astro` with
@@ -1043,6 +1808,42 @@ for a shortlist for bios and cards, which is a separate deliverable.
    `source/edition-02/` (rendered 13 Sep, "FACTS PENDING", slot
    placeholders where the repo's copy has figures). Nothing was taken from
    either.
+   **Checked, 2026-10-18, after its new-voice film had gone public.** Two
+   checkers by half opened every source and a skeptic per half re-opened
+   every flag: 81 claims, 46 held, 35 flagged, 28 upheld, and one held
+   claim broken by its skeptic (a five-millimetre "die" is the package).
+   The contract figures are awards, not payments, and the Air Force's was
+   announced 30 January 2024, not in February; the forty-four to one is
+   one radio against a two-node network, not "against a single node" (The
+   Floor carried the same phrase and was corrected with it); the Pi 5 node
+   is the vendor's experimental build; the MM8108 supports WPA3 with only
+   AES and SHA-2 in hardware; its module was announced and sampling in
+   June, not shipped; "the widest public allocation of its kind on earth"
+   had no source and was cut, and the band is not "clean"; the MPU5's
+   throughput was published (100+ Mbps), and its supply-chain row's NDAA
+   and Blue UAS claims were not; Reticulum is optional in the Haven stack
+   and only some packets are signed; Silvus runs 2-by-2 and 4-by-4 radios
+   and the DoD-assessed library is Persistent's; Motorola's Ukraine line
+   is its own words, not a claim the radios kept drones flying; "closed by
+   a third" was a quarter; spectrum and waveform are capability rows, not
+   physics. **An amended edition keeps only the lines its amendment
+   answers**: the 43.3 throughput figure and the Canadian point-to-point
+   sentence stay as printed, because The Floor exists to answer them, and
+   everything else on the page was corrected like any other edition, with
+   a dated note under its sources. The film and both Shorts (the new one,
+   held before its 21:00 UTC slot, and the old Kokoro one, withdrawn by
+   video id) went private with 0, 0 and 3 views, and the page renders
+   again into a replacement. An adversarial review of the new wording (a
+   facts lens and a house lens, a skeptic each) then upheld 13 more: the
+   opening still said the full parts list was free (the component lists
+   are in the paid guide); the closing beat's "capability" now meant the
+   reverse of the section around it, so it reads "radio"; the dated note
+   claimed every source was reopened when one could not be found; the
+   ISM module runs 4 W; January is when the award was announced; the
+   "as built" column no longer lists optional Reticulum's cryptography as
+   built in; a 150 Mbps figure that broke the page's own two-to-one was
+   cut; two source entries name the documents they now stand for; and
+   "Edition 02" became The Subtraction, its name on the site.
 
 0b. **Edition 01 · The Snapshot Problem arrived as a finished, sourced
    PDF** (seventeen pages, thirty-three sources, rendered 11 Sep 10:53 UTC)
@@ -1080,7 +1881,7 @@ for a shortlist for bios and cards, which is a separate deliverable.
    summarized thinking to distillation is now Anthropic's own (12 Oct
    2026, added as source 34) rather than the page's inference; the
    accumulation paper keeps the original real data and piles up the
-   synthetic; ACE needed labels on finance; sparse memory learned as much
+   synthetic; ACE without labels gained little or fell below the base model on the finance tagging task; sparse memory learned as much
    as full fine-tuning and forgot far less, on facts, so its point on the
    plasticity chart moved (the chart is taller on a phone so the crowded
    top keeps its labels apart); SEAL's 72.5 percent is the share of
@@ -1182,7 +1983,9 @@ for a shortlist for bios and cards, which is a separate deliverable.
    October. One sentence of
    The Markup was wrong too: RSS-247's higher e.i.r.p. for point-to-point
    links is for 2.4 and 5.8 GHz only (s. 6.5 a). The Floor amends it and
-   The Markup stays as printed, as it does for the throughput row.
+   The Markup stays as printed, as it does for the throughput row (and
+   only on those two lines: the rest of the page was corrected later the
+   same day, Findings 0).
    Notebookcheck's summary of the builder's later network contradicted
    his own post, so the post replaced it. The page carries the house
    citation marks. Prices re-read the day it went live: Seeed $14.99,
@@ -1206,13 +2009,18 @@ for a shortlist for bios and cards, which is a separate deliverable.
   Bytespider and the rest). Most sites block these; this one does the
   opposite on purpose. Do not "tighten" it. Drafts are the only exclusion.
 - `src/pages/llms.txt.ts` is generated from the editions list, llmstxt.org
-  shape, and states only what does not change. `tools/generate-llms-full.cjs`
+  shape, and states what an edition is, which does not change once it is
+  issued; an edition's film follows its PDF there once it is out, as it
+  does in `/llms-full.txt`, and that URL does change (a corrected film is a
+  new video, a withdrawn one is dropped), with the commit that changes
+  `src/lib/films.json`. `tools/generate-llms-full.cjs`
   builds `/llms-full.txt` **from the built HTML** as a post-build step, so
   it cannot drift from what is published. Both are wired into `npm run
   build`, so Vercel produces them.
 - `src/pages/index.json.ts` is the index in machine form: the published
-  editions with date, date label, title, URL, lede, note and PDF, in site
-  order, from the same list. It exists so a companion on another origin,
+  editions with date, date label, title, URL, lede, note, PDF and film (the
+  watch page once the film is out, else null, from `src/lib/films.json`),
+  in site order, from the same list. It exists so a companion on another origin,
   the desk at apt.grok.me first, renders the index without typing it.
   `vercel.json` sends it with `Access-Control-Allow-Origin: *` so a
   browser on that origin may fetch it. Nothing else is open cross-origin
@@ -1339,6 +2147,26 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
   API and would have vanished from matching once the new pair claimed the
   render, leaving both voices public; the title route now keeps an
   older-voice video matched.
+- **2026-10-18 · Packaging defects found by research, fixed at the source.**
+  A research pass (three lanes: what breaks out in the niche, an audit of
+  our own packaging, format and retention; a critic striking anything
+  unsupported) found four defects the films carried, all now fixed in
+  code: four thumbnails read THE, because the fallback took the title's
+  first word when an edition has no headline figure (it now takes the
+  acid word, the thumbnail's original design); four films had a chapter
+  under ten seconds, which switches YouTube's chapters off for the whole
+  video (`tools/lib/chapters.mjs` merges a short chapter into its
+  neighbour, and the uploader and the channel tool apply it to every
+  description they send or compare, so a sync repairs films already up);
+  every film opened on 3.6 s of silence before the title (now 0.9 s, one
+  beat of the rose, in `tools/narrate.py`; the narration cache ignores
+  gaps, so it costs no credits); and a corrected render could be uploaded
+  while the video it replaces was still scheduled (upload now holds it).
+  Titles were left alone: what a film is called is a brand call, so the
+  research's proposed titles went to the owner. The Supply Cabinet, on the
+  story still drawing millions of views in the niche three months on,
+  took The Tilt Gap's slot on 19 October; The Tilt Gap, whose thumbnail
+  read THE and whose first number comes at 2:32, moved to the 22nd.
 - **2026-10-18 · A film waits for its edition's check.** A film reads its
   page aloud, so a page nobody checked becomes a film nobody checked, in a
   voice, in front of more people than the page has. Four editions were
@@ -1358,6 +2186,150 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
   YouTube kept**: the first holds came back echoing the old publish time
   while a fresh read showed the time cleared, so `schedule` now reads every
   write back and judges that.
+
+- **2026-10-18 · An opinion about Anthropic is the owner's to change.**
+  The builder is an Anthropic model. NS-02 calls Anthropic "the company
+  that markets itself on trust" with no source, and the house rule would
+  cut or source an unsourced characterisation. Cutting it would be the
+  builder softening a criticism of its own maker; sourcing it would be the
+  builder choosing how its maker is described. Either way the conflict is
+  the builder's, so lines about Anthropic are flagged to the owner and
+  left as written, and the facts about Anthropic on any page are checked
+  like any other.
+
+- **2026-10-19 · Seven videos turned public that no workflow touched.**
+  Between the 07:26 UTC list (every one private, the held cuts with no
+  publish time) and the 15:23 UTC list, seven films read public: The
+  Supply Cabinet (scheduled for 15:00, as planned), Edition 02's
+  corrected film (scheduled for 25 October), the old Tilt Gap cut, and
+  the uncorrected old cuts of The Hand in the Water, The Closest Humans,
+  The Snapshot Problem and The Markup's Kokoro film. No workflow ran in
+  that window and nothing here ever sets a video public, so the change
+  came from outside this repository (Studio is the likely route); the
+  owner was asked. The four uncorrected cuts were withdrawn the same
+  afternoon, private and read back, views kept, because a film with claims
+  its edition's check removed does not stay out (Decisions log, "A film
+  waits for its edition's check"). Three of them matched no render (their
+  corrected titles changed, and API uploads keep no file name), so
+  `withdraw` gained a second guard: an id whose description links the
+  apex is ours. Edition 02's film and the old Tilt Gap cut carry no
+  removed claim and were left for the owner to decide. During the
+  afternoon GitHub's run-status API lagged by up to twenty minutes while
+  the jobs had already run, so a run's job log, read directly, is the
+  truth about whether it ran. **Resolved 20 Oct: the owner made them
+  public in Studio** ("I made a few more public"); nothing else had
+  access. The four uncorrected cuts stay private until the owner chooses,
+  film by film, between private and unlisted (the titles task, below).
+
+- **2026-10-20 · A title names its subject inside the first 40
+  characters, typed once.** The owner brought a brief from a claude.ai
+  chat (a titles task and an `aedificare-film` skill): a phone shows about
+  the first 40 characters, and "Depth, tokens, time" or "Two men, one
+  year" tells a stranger nothing, so the searchable noun (NVIDIA, OpenAI,
+  Raspberry Pi, Navier–Stokes, AI agents) goes in front, the edition's own
+  line kept where it works, and nothing in a title the film does not say.
+  Until now the title was generated, the lede's first sentence; a title
+  is a packaging call made per film, so it is typed once, as `youtube` on
+  the edition in `src/lib/editions.mjs` (`film`, and `short` where the
+  Short needs its own), and generated everywhere from there. Every title
+  was checked against its keeper's own captions (the narration's word
+  timings, so exactly what the film says) and the edition's corrections,
+  by a verifier and a skeptic per group: the chat side's proposals were
+  written before some corrections, and several said more than the film
+  (The Floor's 15 Mbps belongs to the first Haven, not the $400 node;
+  The Markup's $18,214 is a ceiling, not a price; The Subtraction's film
+  never says "170HX"). The descriptions now open with the edition's link, and an
+  amendment and what it amends name each other near the top. A sync can
+  only send what the release carries, so a change made in Studio would be
+  undone by the next one; `film-meta.yml` refiles the words and `sync`
+  sends them, both dry first, and nothing is written to YouTube before
+  the owner says go. The chat side's skill was read and not installed as
+  it stands: it says every frame is computed (override 8 lets footage
+  in), fetches captions with `yt-dlp --no-check-certificates` (a TLS check
+  is never turned off here, and the films' own captions are on their
+  releases), and quotes YouTube Partner Program thresholds it marks as
+  reported. Its rules that hold are recorded here and in
+  `.claude/skills/youtube/SKILL.md`.
+
+- **2026-10-21 · An edition links its film, and nothing is embedded.**
+  The owner asked in chat: "Shouldn't we have these LinkedIn maybe even
+  embedded in the website?" (the films). The builder answered with the
+  trade-offs below and put two questions with options; the owner chose,
+  for the site, "Link with thumbnail" over click-to-play, a full embed and
+  not yet, and, for LinkedIn, "Not now" over posting from their own
+  profile, from an Aedificare page, or an automated post (LinkedIn later
+  starts with the Shorts posted natively: most guides put its uploads at
+  ten minutes, and the films run eight to eighteen). Each edition
+  whose current film is public carries a block link to the film's YouTube
+  watch page where its PDF is linked (beside it, or in its place where
+  there is none), at the edition's end and in its entry on the home, set
+  as a record ("Film · 18:16 · YouTube": the length and the platform
+  named, never "Watch"), with the film's own thumbnail, the PNG filed on
+  its release, reduced and served from this origin with width, height,
+  lazy loading and alt text, in a 6 px colour field (Void on Bottle,
+  Bottle on Void) rather than a border, which the kit does not draw: on
+  its Bottle home entry, The Supply Cabinet's Bottle thumbnail otherwise
+  left its "1,200" floating like loose type. The record comes first, in the reading order
+  too, so the link's name starts with what it says, and it sits on the
+  baseline of the links beside it with the thumbnail hanging after it;
+  the length is a `<time>` duration, so a screen reader does not take
+  18:16 for a time of day. On the home, where a film makes the row too
+  wide for the edition's own record ("12 sections · seed 7C21"), that
+  record drops to a line of its own at the left, as on a phone, not
+  under the film at the right. **The length** is the film file's own,
+  read from its MP4 header and rounded UP, because that is what YouTube
+  shows: the first cut copied `meta.json`'s rounded 1,095 and 818 s and
+  read 18:15 and 13:38 where YouTube shows 18:16 and 13:39 (the files run
+  1,095.375 and 818.125 s; The Fourth Axis's 864.959 s is 14:25 either
+  way). **Why no embed.** An embed that loads with the page asks YouTube
+  and Google for things the moment the page opens, and no page here asks
+  anyone else for anything (the sweep now counts any request off the
+  origin, which it used to answer 204 unseen); YouTube's player is far
+  more JavaScript than the whole site's 5 kB budget; and its chrome (red,
+  rounded, shadowed, its own typeface) breaks the kit on the surface it
+  sits on. Separately, Google gives video features only to a page whose
+  main content is the video, which an edition page is not, so it carries
+  no VideoObject markup either. Those reasons do not all rule out a
+  click-to-play facade (this thumbnail, with the player loaded only after
+  the reader's click): it asks nobody for anything on load and needs a few
+  hundred bytes of script, though YouTube's chrome would still arrive with
+  the click; it was offered, and the owner chose the plain link.
+  **Small on purpose.** Each thumbnail
+  sets one word or figure in Acid; at 112 by 63 its tallest band of Acid
+  ink, as the probe reads it where it is shown, is 14 px (The Supply
+  Cabinet's 1,200 and The Countersign's 9,000+), 12 (SUBTRACTION) and
+  11 (69), and The Markup's
+  $18,214, not linked yet, reads 15, all under the 16 px capital
+  of 24 px type where the probe starts counting "at scale". At 128 by 72
+  the 1,200 reached 16 px with its comma, so the size came down. A surface
+  of the film's own, the other form, would have put a loud move after the
+  dove. The sweep fails any film thumbnail at scale on its own, wherever
+  it sits (drawn at 224 by 126 all six failed), and the build holds every
+  entry to 112 by 63. **Whether the small Acid word is still a second loud
+  move is the owner's to judge by eye**: it sits under a Flash title on
+  the home's edition surfaces, which "The home is a contents page" says
+  carry no Acid, and in the nav after the dove; no machine can settle
+  that. **Only the current film, never a Short, and only once it is
+  public**: what is public cannot be read without the channel's secrets,
+  so it is the input, one `node tools/films.mjs <id>` and a commit the
+  morning a film publishes (`youtube-channel.mjs` names a public current
+  film the site does not link yet), and each id must be the one its
+  release's `youtube.json` files, so the old Tilt Gap cut
+  (`C7PgSaHZeiA`), public but superseded by `mCq1v6d3GVs`, is refused.
+  **Kept true after the day it is written**, a human duty with three nets
+  (none can make a build fail on what is public): `youtube-channel.mjs`
+  judges every link against the channel on every command but `probe` and
+  fails `list` on a wrong one; withdraw, retire and `upload --replace`
+  name the command when they touch a linked film; and `verify.yml` runs
+  `films.mjs --check --online`, which fails a link whose release's ledger
+  now names another video, and only warns when a render or re-cut has
+  been filed onto the release since (the video, and so the link, is
+  unchanged until the new render goes up as its own video; failing it
+  would have turned every PR red until a correct link was dropped). First linked, as the films
+  public at 15:23 UTC on 20 Oct, each id checked against its ledger: The
+  Fourth Axis (`9joaycmFqsU`), The Subtraction (`00hUzMPhGsY`) and The
+  Supply Cabinet (`yGdOAIj1Wa8`); then The Countersign (`6j4BfaF8ZvM`),
+  public at 15:00 UTC on 21 Oct.
 
 ## Open
 
@@ -1442,7 +2414,11 @@ the four new probes (Acid, fonts, roses, reduced-motion stills).
    (the reasoning is in the design decision above), leave the synthetic
    disclosure unticked, one playlist named Editions; then the channel URL
    goes into `humans.txt` and the JSON-LD `sameAs`, both in this repo, and
-   nowhere else on a surface. Still open: **music** (the owner wanted soft
+   nowhere else on a surface. (Amended 21 Oct 2026: each edition now links
+   its own film's watch page, once the film is public, at its end and on
+   the home, never embedded; the channel URL itself is still written only
+   in those two places. The owner chose the plain link over click-to-play.
+   Decisions log.) Still open: **music** (the owner wanted soft
    piano; the pipeline mixes a file the owner downloads from the YouTube
    Audio Library under the voice with `--music`, credit line in the
    description if the track asks for one; a bed computed from the

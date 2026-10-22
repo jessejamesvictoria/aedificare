@@ -37,6 +37,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
+import { fitDescription } from './lib/chapters.mjs';
 
 const arg = (name, dflt) => { const i = process.argv.indexOf(name); return i > 0 ? process.argv[i + 1] : dflt; };
 const META = process.argv[2];
@@ -45,14 +46,22 @@ const PUBLISH_AT = arg('--publish-at', null);
 const PRIVACY = PUBLISH_AT ? 'private' : arg('--privacy', 'private');
 if (PUBLISH_AT && !(Date.parse(PUBLISH_AT) > Date.now())) { console.error(`upload-youtube: --publish-at ${PUBLISH_AT} is not a future ISO time`); process.exit(1); }
 const UPDATE = arg('--update', null);
+// Set by youtube-channel.mjs sync when no ledger on the release names this video: its ledger is not filed, so no sync will see a debt.
+const UNTRACKED = process.argv.includes('--untracked');
+// Update only the words (title, description, category, language, licence): no caption track and no thumbnail, which
+// cost about 450 units a video against the day's 10,000. youtube-channel.mjs sync passes it when only the words differ.
+const META_ONLY = process.argv.includes('--meta-only');
 // In update mode the playlist is touched only when asked for explicitly: the hand upload may already be in it.
 const PLAYLIST = arg('--playlist', UPDATE ? null : (process.env.YT_PLAYLIST_ID || null));
 if (!META || !fs.existsSync(META)) { console.error('upload-youtube: pass the path to a meta.json written by generate-film'); process.exit(1); }
+if (META_ONLY && !UPDATE) { console.error('upload-youtube: --meta-only updates a video already up; it needs --update <videoId>'); process.exit(1); }
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 if (!YT_CLIENT_ID || !YT_CLIENT_SECRET || !YT_REFRESH_TOKEN) { console.error('upload-youtube: YT_CLIENT_ID, YT_CLIENT_SECRET and YT_REFRESH_TOKEN must be set'); process.exit(1); }
 if (!['private', 'unlisted', 'public'].includes(PRIVACY)) { console.error('upload-youtube: --privacy must be private, unlisted or public'); process.exit(1); }
 
 const meta = JSON.parse(fs.readFileSync(META, 'utf8'));
+// Chapters as YouTube shows them, so a render filed before tools/lib/chapters.mjs is repaired by sending it again.
+meta.description = fitDescription(meta.description, meta.duration);
 // What the videos API refuses, said before a token is minted or a gigabyte is sent: a title over 100 characters,
 // a description over 5,000 bytes, and < or > in either (developers.google.com/youtube/v3/docs/videos).
 if ((meta.title || '').length > 100 || /[<>]/.test(meta.title || '')) { console.error(`upload-youtube: the title runs ${meta.title.length} characters${/[<>]/.test(meta.title) ? ' and holds < or >' : ''}; YouTube takes 100 and no angle brackets`); process.exit(1); }
@@ -76,6 +85,9 @@ const snippet = { title: meta.title, description: meta.description, categoryId: 
 const status = { license: meta.licence || 'youtube', embeddable: true, selfDeclaredMadeForKids: false, containsSyntheticMedia: false };
 
 let id;
+// What could not be sent (a caption track, a thumbnail): written into the ledger, so the video is not taken as done and
+// youtube-channel.mjs sync sends it once the quota is back. On 18 Oct 2026 three caption tracks failed on quota and the run went green.
+const owed = [];
 if (UPDATE) {
   /* ---- bring an existing video up to the render's metadata ---------------- */
   id = UPDATE;
@@ -105,7 +117,7 @@ if (UPDATE) {
 }
 
 /* ---- captions: replace the English track if one exists, else insert ------- */
-if (meta.captions && fs.existsSync(path.join(dir, meta.captions))) {
+if (!META_ONLY && meta.captions && fs.existsSync(path.join(dir, meta.captions))) {
   const srt = fs.readFileSync(path.join(dir, meta.captions));
   const list = await fetch(`${API}/captions?part=snippet&videoId=${id}`, { headers: auth });
   const existing = list.ok ? ((await list.json()).items || []).find((c) => c.snippet.language === 'en' && !c.snippet.isAutoSynced && c.snippet.trackKind !== 'asr') : null;
@@ -118,13 +130,13 @@ if (meta.captions && fs.existsSync(path.join(dir, meta.captions))) {
   const cap = existing
     ? await fetch('https://www.googleapis.com/upload/youtube/v3/captions?uploadType=multipart&part=snippet', { method: 'PUT', headers, body: part({ id: existing.id, snippet: { isDraft: false } }) })
     : await fetch('https://www.googleapis.com/upload/youtube/v3/captions?uploadType=multipart&part=snippet', { method: 'POST', headers, body: part({ snippet: { videoId: id, language: 'en', name: 'English', isDraft: false } }) });
-  if (!cap.ok) console.error('  captions failed (the video is up):', cap.status, await cap.text()); else console.log(`  captions: ${meta.captions}${existing ? ' (replaced)' : ''}`);
+  if (!cap.ok) { owed.push('captions'); console.error('  captions failed (the video is up):', cap.status, await cap.text()); } else console.log(`  captions: ${meta.captions}${existing ? ' (replaced)' : ''}`);
 }
 
 /* ---- thumbnail (needs a phone-verified channel; otherwise YouTube keeps its own frame) ---- */
-if (meta.thumbnail && fs.existsSync(path.join(dir, meta.thumbnail))) {
+if (!META_ONLY && meta.thumbnail && fs.existsSync(path.join(dir, meta.thumbnail))) {
   const th = await fetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${id}`, { method: 'POST', headers: { ...auth, 'content-type': 'image/png' }, body: fs.readFileSync(path.join(dir, meta.thumbnail)) });
-  if (!th.ok) console.error('  thumbnail failed (the video is up):', th.status, await th.text()); else console.log(`  thumbnail: ${meta.thumbnail}`);
+  if (!th.ok) { owed.push('thumbnail'); console.error('  thumbnail failed (the video is up):', th.status, await th.text()); } else console.log(`  thumbnail: ${meta.thumbnail}`);
 }
 
 /* ---- playlist ------------------------------------------------------------- */
@@ -133,5 +145,20 @@ if (PLAYLIST) {
   if (!pl.ok) console.error('  playlist failed (the video is up):', pl.status, await pl.text()); else console.log(`  playlist: ${PLAYLIST}`);
 }
 
-fs.writeFileSync(path.join(dir, meta.kind === 'short' ? 'youtube-short.json' : 'youtube.json'), JSON.stringify({ id, url: `https://youtu.be/${id}`, privacy: UPDATE ? 'unchanged' : PRIVACY, publishAt: UPDATE ? undefined : PUBLISH_AT || undefined, mode: UPDATE ? 'update' : 'upload', at: new Date().toISOString(), title: meta.title }, null, 1) + '\n');
+const ledgerPath = path.join(dir, meta.kind === 'short' ? 'youtube-short.json' : 'youtube.json');
+// An update of the video the ledger already names keeps the upload's record (privacy, publish time, when) and adds when
+// it was brought up to date; what is still owed is written either way, and dropped once nothing is.
+const prior = UPDATE && fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) : null;
+const record = prior && prior.id === id
+  ? { ...prior, title: meta.title, updated: new Date().toISOString() }
+  : { id, url: `https://youtu.be/${id}`, privacy: UPDATE ? 'unchanged' : PRIVACY, publishAt: UPDATE ? undefined : PUBLISH_AT || undefined, mode: UPDATE ? 'update' : 'upload', at: new Date().toISOString(), title: meta.title };
+// A words-only update tried no caption track and no thumbnail, so it settles nothing the ledger says is owed.
+if (META_ONLY && prior?.id === id && prior.owed?.length) owed.push(...prior.owed);
+if (owed.length) record.owed = owed; else delete record.owed;
+fs.writeFileSync(ledgerPath, JSON.stringify(record, null, 1) + '\n');
+if (owed.length && UNTRACKED) console.log(`  owed: ${owed.join(' and ')} did not go up, and no ledger on the release names this video, so a plain sync will not send ${owed.length > 1 ? 'them' : 'it'}`);
+else if (owed.length) {
+  console.log(`  owed: ${owed.join(' and ')} did not go up; the ledger says so, and youtube-channel.mjs sync sends ${owed.length > 1 ? 'them' : 'it'}`);
+  if (process.env.GITHUB_ACTIONS) console.log(`::warning::${id} is up without its ${owed.join(' and ')} (the error is above; if it is the quota, that resets at midnight Pacific). Run youtube.yml action=sync once it has.`);
+}
 console.log(`  done: https://studio.youtube.com/video/${id}/edit`);
